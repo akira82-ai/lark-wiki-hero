@@ -33,19 +33,7 @@ class WikiOptimizer:
         actions = []
 
         for problem in problems:
-            if problem["type"] == "deep_structure":
-                # 生成扁平化操作
-                for node in problem["nodes"]:
-                    actions.append({
-                        "type": "flatten",
-                        "node_token": node["token"],
-                        "title": node["title"],
-                        "current_depth": node["depth"],
-                        "reason": f"层级过深 ({node['depth']}层)",
-                        "suggestion": "提升至更合适的父节点"
-                    })
-
-            elif problem["type"] == "empty_category":
+            if problem["type"] == "empty_category":
                 # 生成删除操作
                 for node in problem["nodes"]:
                     actions.append({
@@ -65,17 +53,6 @@ class WikiOptimizer:
                         "title": node.get("title", ""),
                         "reason": "命名不一致",
                         "suggestion": "统一命名风格"
-                    })
-
-            elif problem["type"] == "orphan_nodes":
-                # 生成移动操作
-                for node in problem["nodes"]:
-                    actions.append({
-                        "type": "move_to_category",
-                        "node_token": node["token"],
-                        "title": node["title"],
-                        "reason": "孤立节点",
-                        "suggestion": "移入合适的分类"
                     })
 
         return {
@@ -102,10 +79,8 @@ class WikiOptimizer:
         # 有删除操作
         if any(a["type"] == "delete" for a in actions):
             risk_level = "high"
-
-        # 有大量移动操作
-        move_count = sum(1 for a in actions if a["type"] in ["move", "move_to_category", "flatten"])
-        if move_count > 10:
+        # 有大量重命名操作
+        elif sum(1 for a in actions if a["type"] == "rename") > 10:
             risk_level = "medium"
 
         return risk_level
@@ -211,38 +186,57 @@ class WikiOptimizer:
         """
         action_type = action["type"]
         node_token = action["node_token"]
-
-        # TODO: 实现各种操作的具体逻辑
-        # 目前返回 skipped 状态，因为需要用户确认目标位置等参数
+        title = action.get("title", "")
 
         if action_type == "delete":
-            # 删除空分类
-            # success = delete_node(node_token)
-            return {
-                "status": "skipped",
-                "message": "删除操作需要手动确认"
-            }
+            # 删除空分类 - 安全操作，因为空分类没有子节点
+            try:
+                success = delete_node(node_token)
+                if success:
+                    return {
+                        "status": "success",
+                        "message": f"已删除空分类: {title}"
+                    }
+                else:
+                    return {
+                        "status": "failed",
+                        "message": f"删除失败: {title}"
+                    }
+            except Exception as e:
+                return {
+                    "status": "failed",
+                    "message": f"删除异常: {str(e)}"
+                }
 
         elif action_type == "rename":
-            # 重命名
-            # new_title = self._generate_consistent_name(action["title"])
-            # success = update_node_title(node_token, new_title)
-            return {
-                "status": "skipped",
-                "message": "重命名操作需要指定新名称"
-            }
-
-        elif action_type in ["move", "move_to_category", "flatten"]:
-            # 移动节点
-            # 需要确定目标父节点
-            return {
-                "status": "skipped",
-                "message": "移动操作需要指定目标位置"
-            }
+            # 重命名 - 简单实现：移除特殊字符，统一为中文或英文
+            new_title = self._generate_consistent_name(title)
+            if new_title == title:
+                return {
+                    "status": "skipped",
+                    "message": f"命名已符合规范: {title}"
+                }
+            try:
+                success = update_node_title(node_token, new_title)
+                if success:
+                    return {
+                        "status": "success",
+                        "message": f"已重命名: {title} → {new_title}"
+                    }
+                else:
+                    return {
+                        "status": "failed",
+                        "message": f"重命名失败: {title}"
+                    }
+            except Exception as e:
+                return {
+                    "status": "failed",
+                    "message": f"重命名异常: {str(e)}"
+                }
 
         return {
             "status": "skipped",
-            "message": "未知操作类型"
+            "message": f"未知操作类型: {action_type}"
         }
 
 

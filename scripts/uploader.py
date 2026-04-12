@@ -7,7 +7,6 @@ import sys
 import time
 from pathlib import Path
 from typing import List, Dict, Optional
-from classifier import WikiClassifier
 from lark_api import create_document, load_config, require_config
 
 
@@ -22,23 +21,15 @@ class WikiUploader:
             delay_ms: 批量上传时的延迟（毫秒）
         """
         self.delay = delay_ms / 1000.0
-        self.classifier = None
-
-    def _init_classifier(self):
-        """延迟初始化分类器"""
-        if self.classifier is None:
-            self.classifier = WikiClassifier()
 
     def upload_single_file(self, file_path: str,
-                          parent_token: Optional[str] = None,
-                          auto_classify: bool = True) -> Optional[Dict]:
+                          parent_token: Optional[str] = None) -> Optional[Dict]:
         """
         上传单个文件
 
         Args:
             file_path: 文件路径
-            parent_token: 父节点 token（指定时跳过自动分类）
-            auto_classify: 是否使用自动分类
+            parent_token: 父节点 token（未指定时使用默认父节点）
 
         Returns:
             上传结果
@@ -56,16 +47,6 @@ class WikiUploader:
 
         # 确定目标节点
         target_token = parent_token
-
-        if auto_classify and target_token is None:
-            self._init_classifier()
-            print(f"\n{'='*50}")
-            classification = self.classifier.classify(str(file_path))
-
-            if classification:
-                target_token = classification["best_token"]
-                print(f"→ 目标目录: {classification['best_path']}")
-
         if target_token is None:
             config = load_config()
             target_token = config.get("default_parent_token", "")
@@ -106,15 +87,13 @@ class WikiUploader:
             }
 
     def upload_directory(self, directory: str,
-                        parent_token: Optional[str] = None,
-                        auto_classify: bool = True) -> List[Dict]:
+                        parent_token: Optional[str] = None) -> List[Dict]:
         """
         批量上传目录中的所有 Markdown 文件
 
         Args:
             directory: 目录路径
-            parent_token: 父节点 token（指定时跳过自动分类）
-            auto_classify: 是否使用自动分类
+            parent_token: 父节点 token（未指定时使用默认父节点）
 
         Returns:
             上传结果列表
@@ -138,10 +117,6 @@ class WikiUploader:
         print(f"扫描目录: {directory}")
         print(f"找到 {len(md_files)} 个 Markdown 文件\n")
 
-        # 初始化分类器
-        if auto_classify:
-            self._init_classifier()
-
         # 批量上传
         results = []
         for i, file_path in enumerate(md_files, 1):
@@ -149,8 +124,7 @@ class WikiUploader:
 
             result = self.upload_single_file(
                 file_path,
-                parent_token,
-                auto_classify
+                parent_token
             )
 
             if result:
@@ -213,16 +187,14 @@ def main():
   # 批量上传目录
   python3 uploader.py --dir ~/Documents/notes
 
-  # 批量上传到指定目录（跳过分类）
-  python3 uploader.py --dir ~/Documents/notes --parent <node_token> --no-classify
+  # 批量上传到指定目录
+  python3 uploader.py --dir ~/Documents/notes --parent <node_token>
         """
     )
 
     parser.add_argument("file", nargs="?", help="要上传的文件路径")
     parser.add_argument("--dir", "-d", help="批量上传目录")
-    parser.add_argument("--parent", "-p", help="父节点 token（指定时跳过自动分类）")
-    parser.add_argument("--no-classify", action="store_true",
-                       help="禁用自动分类，使用默认父节点")
+    parser.add_argument("--parent", "-p", help="父节点 token（未指定时使用默认父节点）")
 
     args = parser.parse_args()
 
@@ -232,15 +204,13 @@ def main():
     if args.dir:
         uploader.upload_directory(
             args.dir,
-            parent_token=args.parent,
-            auto_classify=not args.no_classify
+            parent_token=args.parent
         )
     # 上传单个文件
     elif args.file:
         uploader.upload_single_file(
             args.file,
-            parent_token=args.parent,
-            auto_classify=not args.no_classify
+            parent_token=args.parent
         )
     else:
         parser.print_help()

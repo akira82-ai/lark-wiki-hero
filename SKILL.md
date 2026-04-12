@@ -1,6 +1,6 @@
 ---
 name: lark-wiki-hero
-version: 1.0.0
+version: 2.0.0
 description: "飞书知识库智能管理工具。当用户提到飞书知识库、wiki 文档管理、上传文档到飞书、整理知识库结构、格式化 Markdown 文档，或任何与飞书/Lark 知识空间相关的操作时，必须使用此技能。支持智能自动分类上传、知识库结构分析与优化、文件规范化处理。即使使用'飞书文档'、'知识管理'等类似表达时，也应考虑使用此技能。"
 metadata:
   requires:
@@ -105,12 +105,14 @@ python3 {baseDir}/scripts/lark_api.py --check
 
 **如果配置不存在，初始化配置**：
 ```bash
-# 方式 1：交互式初始化（推荐）
-python3 {baseDir}/scripts/lark_api.py --init
-
-# 方式 2：从 URL 直接初始化
+# 方式 1：从 URL 直接初始化（推荐，适用于所有环境）
 python3 {baseDir}/scripts/lark_api.py --save-config "https://my.feishu.cn/wiki/<token>"
+
+# 方式 2：交互式初始化（仅适用于手动终端，不适用于 Claude Code）
+python3 {baseDir}/scripts/lark_api.py --init
 ```
+
+> **注意**：`--init` 使用交互式输入，只能在手动终端中使用。在 Claude Code 环境中，请使用 `--save-config` 直接传入 URL。
 
 **配置文件格式**：
 ```json
@@ -126,73 +128,134 @@ python3 {baseDir}/scripts/lark_api.py --save-config "https://my.feishu.cn/wiki/<
 如果配置检查失败，脚本会自动提示初始化命令。对于首次使用的用户，应该：
 
 1. 首先运行 `--check` 确认环境状态
-2. 根据提示运行 `--init` 进行交互式配置
+2. 使用 `--save-config` 传入知识库 URL 进行配置
 3. 配置完成后重新执行目标操作
+
+> **注意**：交互式配置 (`--init`) 仅适用于手动终端环境。在 Claude Code 中请使用 `--save-config`。
 
 ## 功能概述
 
 Lark Wiki Hero 是一个智能飞书知识库管理工具，提供三大核心功能：
 
-1. **智能上传** - 自动分析文档内容，匹配知识库最佳分类目录
+1. **智能上传** - 基于语义理解自动分析文档内容，匹配知识库最佳分类目录
 2. **知识库重构** - 分析知识库结构，检测问题并生成优化方案
-3. **文件预处理** - 学习知识库命名规范，重命名并格式化 Markdown 文档
+3. **文档格式化** - 统一和优化 Markdown 文档格式
 
-## 首次使用配置
+## 功能一：智能上传（基于语义理解）
 
-首次运行时，技能会自动询问您的知识库信息并保存配置：
+自动分析文档内容，利用大模型的语义理解能力，将文件上传到知识库最匹配的分类目录。
 
-```bash
-# 首次使用会提示输入
-请输入您的飞书知识库 URL: https://my.feishu.cn/wiki/xxxxx
-```
+### 核心设计原则
 
-配置会保存到 `~/.claude/skills/lark-wiki-hero/config.json`：
+> **重要**：本功能的分类逻辑依赖于 Claude（大模型）的语义理解能力，而不是基于关键词匹配的脚本。
 
-```json
-{
-  "space_id": "7472294423981064194",
-  "space_url": "https://my.feishu.cn/wiki/xxxxx",
-  "default_parent_token": ""
-}
-```
+### 工作流程
 
-## 功能一：智能上传
+当用户请求上传文档时，按以下步骤执行：
 
-自动分析文档内容，将文件上传到知识库最匹配的分类目录。
-
-### 使用方式
+#### 步骤 1：获取知识库结构
 
 ```bash
-# 上传单个文件
-python3 {baseDir}/scripts/uploader.py path/to/document.md
-
-# 批量上传目录
-python3 {baseDir}/scripts/uploader.py --dir path/to/directory
-
-# 指定父节点（不使用自动分类）
-python3 {baseDir}/scripts/uploader.py path/to/document.md --parent <node_token>
+python3 {baseDir}/scripts/lark_api.py --check
+python3 {baseDir}/scripts/lark_api.py --get-structure
 ```
 
-### 工作原理
+**重要**：注意输出中的 `[可用分类]` 标记
+- 📂 **[可用分类]** = 有子节点的节点，可以作为上传目标
+- 📄 = 叶子节点（没有子节点），不能作为上传目标
 
-1. 读取知识库目录结构
-2. 分析文档标题和前 200 字符内容
-3. 使用关键词匹配算法找到最佳分类
-4. 使用 `lark-cli docs +create` 创建文档
+**选择策略**：
+- 优先选择与文档主题语义最匹配的 `[可用分类]`
+- 如果知识库是扁平结构（所有节点都是叶子节点），使用根目录（空 parent_token）
 
-### 示例
+#### 步骤 2：读取并理解文档内容
+
+使用 Read 工具读取用户要上传的文档，理解其：
+- **主题类型**：技术教程、产品文档、学习笔记、行业报告等
+- **内容性质**：原创内容、转载内容、工作文档等
+- **目标受众**：开发者、产品经理、普通用户等
+
+#### 步骤 3：语义匹配分类
+
+**利用你的语义理解能力**，将文档与知识库结构进行匹配：
+
+```
+文档: "Python异步编程完全指南"
+  → 理解: 这是一份技术教程
+  → 知识库扫描:
+    - "我要学" (学习教程类) ✓ 匹配
+    - "我要用" (工具使用类) ✗ 不匹配
+    - "磊叔原创" (原创内容) ✗ 不匹配
+  → 决策: 上传到"我要学"下
+```
+
+**匹配优先级**：
+1. 主题匹配（技术类 → 技术目录）
+2. 用途匹配（教程 → 学习/笔记）
+3. 受众匹配（内部文档 → 相关部门）
+
+#### 步骤 4：执行上传
+
+使用 `lark-cli docs +create` 创建文档：
 
 ```bash
-# 上传 Python 教程
-python3 {baseDir}/scripts/uploader.py ~/Downloads/Python教程.md
-
-# 输出：
-# 正在分析文档: Python教程.md
-# 检测到关键词: Python, 编程, 教程
-# 匹配目录: 技术/编程/Python
-# 正在上传... ✓
-# 文档已创建: https://my.feishu.cn/wiki/xxxxx
+lark-cli docs +create \
+  --title "文档标题" \
+  --markdown "$(cat 文档内容)" \
+  --wiki-node <父节点token>
 ```
+
+### 执行示例
+
+**用户请求**：
+> "帮我把 Python教程.md 上传到飞书知识库"
+
+**你的执行流程**：
+
+```
+1. 检查配置 ✓
+2. 获取知识库结构:
+   - 我要学
+   - 我要用
+   - 磊叔原创
+   - 行业报告与政策趋势
+   ...
+
+3. 读取文档: Python教程.md
+   → 内容: Python asyncio 库使用指南...
+
+4. 语义分析:
+   - 这是一份技术教程
+   - 适合想学习 Python 的开发者
+   - 应该归类为学习材料
+
+5. 分类决策:
+   → 最佳匹配: "我要学"
+
+6. 执行上传:
+   lark-cli docs +create --title "Python教程.md" \
+     --wiki-node <我要学的token> --markdown "..."
+```
+
+### 批量上传处理
+
+对于批量上传请求：
+
+1. 扫描目录获取所有 Markdown 文件
+2. 对每个文件重复上述步骤 2-4
+3. 为每个文件选择最合适的分类（可能不同）
+4. 添加延迟避免 API 限流（每个文件间等待 1 秒）
+
+### 特殊情况处理
+
+**无法确定分类时**：
+- 如果文档内容模糊或难以分类
+- 询问用户："这个文档应该放在哪个分类下？"
+- 或默认使用根目录/默认父节点
+
+**知识库无分类结构时**：
+- 直接上传到根目录
+- 提示用户："建议创建分类目录以更好地组织文档"
 
 ## 功能二：知识库重构
 
@@ -237,9 +300,9 @@ python3 {baseDir}/scripts/analyzer.py --analyze
 # ℹ️ 孤立节点: 3 个
 ```
 
-## 功能三：文件预处理
+## 功能三：文档格式化
 
-学习知识库的命名规范，对本地文件进行重命名和格式化。
+统一和优化 Markdown 文档格式。
 
 ### 使用方式
 
@@ -249,12 +312,6 @@ python3 {baseDir}/scripts/formatter.py path/to/document.md
 
 # 批量格式化目录
 python3 {baseDir}/scripts/formatter.py --dir path/to/directory
-
-# 学习知识库命名规范并重命名
-python3 {baseDir}/scripts/naming.py --learn-and-rename path/to/file.md
-
-# 仅学习命名规范（不执行重命名）
-python3 {baseDir}/scripts/naming.py --learn-only
 ```
 
 ### Markdown 格式化规则
@@ -290,8 +347,7 @@ python3 {baseDir}/scripts/formatter.py messy_document.md
 | 分析结构 | `python3 {baseDir}/scripts/analyzer.py --analyze` |
 | 执行优化 | `python3 {baseDir}/scripts/optimizer.py --execute` |
 | 格式化 Markdown | `python3 {baseDir}/scripts/formatter.py <file.md>` |
-| 学习命名规范 | `python3 {baseDir}/scripts/naming.py --learn-only` |
-| 智能重命名 | `python3 {baseDir}/scripts/naming.py --learn-and-rename <file.md>` |
+| 批量格式化 | `python3 {baseDir}/scripts/formatter.py --dir <dir>` |
 
 ## 权限要求
 
@@ -314,7 +370,7 @@ lark-cli auth login --domain <your-domain>
 **中文**：
 - "上传知识库"、"智能上传"、"批量上传文档"
 - "整理知识库"、"重构知识库"、"优化知识库"
-- "预处理文档"、"格式化 markdown"
+- "格式化 markdown"、"文档格式化"
 
 **英文**：
 - "upload to wiki", "smart upload", "batch upload"
@@ -374,8 +430,11 @@ lark-cli auth status
 # 删除旧配置（如果存在）
 rm ~/.claude/skills/lark-wiki-hero/config.json
 
-# 重新初始化配置
-python3 ~/.claude/skills/lark-wiki-hero/scripts/lark_api.py --init
+# 重新初始化配置（使用 --save-config 适用于所有环境）
+python3 ~/.claude/skills/lark-wiki-hero/scripts/lark_api.py --save-config "https://my.feishu.cn/wiki/<token>"
+
+# 或者：在手动终端中使用交互式初始化
+# python3 ~/.claude/skills/lark-wiki-hero/scripts/lark_api.py --init
 ```
 
 #### 3. 权限不足
@@ -406,8 +465,11 @@ lark-cli auth login --domain <your-domain>
 lark-cli api GET "/open-apis/wiki/v2/spaces"
 
 # 从输出中复制 space_id，手动更新配置文件
-# 或重新运行初始化
-python3 {baseDir}/scripts/lark_api.py --init
+# 或使用 --save-config 重新配置
+python3 {baseDir}/scripts/lark_api.py --save-config "https://my.feishu.cn/wiki/<space_id>"
+
+# 或者：在手动终端中使用交互式初始化
+# python3 {baseDir}/scripts/lark_api.py --init
 ```
 
 #### 5. API 调用失败
