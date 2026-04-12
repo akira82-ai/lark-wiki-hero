@@ -109,7 +109,7 @@ graph TB
 |------|------|
 | 技能框架 | Claude Code Skills |
 | 编程语言 | Python 3.9+ |
-| CLI 工具 | lark-cli 1.0.0 |
+| CLI 工具 | lark-cli 1.0.9+ |
 | API | 飞书 OpenAPI |
 | 配置格式 | JSON |
 
