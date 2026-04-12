@@ -6,6 +6,7 @@ Markdown 格式化器 - 统一和优化 Markdown 文档格式
 import re
 from pathlib import Path
 from typing import Dict, List
+from lark_api import require_config
 
 
 class MarkdownFormatter:
@@ -34,7 +35,7 @@ class MarkdownFormatter:
 
         # 统计信息
         self.stats = {
-            "blank_lines_removed": 0,
+            "blank_lines_normalized": 0,
             "trailing_spaces_trimmed": 0,
             "headers_normalized": 0,
             "lists_fixed": 0,
@@ -176,18 +177,21 @@ class MarkdownFormatter:
             # 修复列表格式（跳过复杂处理时仅做简单修复）
             if self.rules["fix_lists"] and not skip_complex:
                 # 确保列表符号后有空格
-                list_match = re.match(r'^(\s*[-*+])([^\s])', processed)
+                list_match = re.match(r'^(\s*[-*+])(\S.*)', processed)
                 if list_match:
                     processed = f"{list_match.group(1)} {list_match.group(2)}"
                     self.stats["lists_fixed"] += 1
                     changed = True
 
-                # 确保有序列表后有空格
-                ordered_list_match = re.match(r'^(\s*\d+)([^\s\.])', processed)
-                if ordered_list_match:
-                    processed = f"{ordered_list_match.group(1)}. {ordered_list_match.group(2)}"
-                    self.stats["lists_fixed"] += 1
-                    changed = True
+                # 确保有序列表后有空格（排除已有正确格式的情况）
+                # 首先检查是否已经是正确格式 (数字 + . + 空格)
+                if not re.match(r'^\s*\d+\.\s', processed):
+                    # 匹配数字开头但没有正确格式的情况
+                    ordered_list_match = re.match(r'^(\s*\d+)([^\.\s].*)', processed)
+                    if ordered_list_match:
+                        processed = f"{ordered_list_match.group(1)}. {ordered_list_match.group(2)}"
+                        self.stats["lists_fixed"] += 1
+                        changed = True
 
             # 标准化链接格式（跳过复杂处理时跳过）
             if self.rules["normalize_links"] and not skip_complex:
@@ -201,15 +205,79 @@ class MarkdownFormatter:
 
             formatted_lines.append(processed)
 
-        # 统一空行
+        # 统一空行（智能处理，放在最后因为需要完整分析上下文）
         if self.rules["unify_blank_lines"]:
-            formatted_lines = self._unify_blank_lines(formatted_lines)
+            formatted_lines = self._smart_unify_blank_lines(formatted_lines)
 
         return '\n'.join(formatted_lines)
 
-    def _unify_blank_lines(self, lines: List[str]) -> List[str]:
+    def _classify_line(self, line: str, in_code_block: bool) -> str:
         """
-        统一空行（最多2个连续空行）
+        分类单行类型
+
+        Args:
+            line: 行内容
+            in_code_block: 是否在代码块内
+
+        Returns:
+            行类型: empty, code_fence, code_content, header, list, paragraph
+        """
+        stripped = line.strip()
+
+        # 空行
+        if stripped == "":
+            return "empty"
+
+        # 代码块标记（``` 或 ~~~）
+        if stripped.startswith("```") or stripped.startswith("~~~"):
+            return "code_fence"
+
+        # 代码块内容
+        if in_code_block:
+            return "code_content"
+
+        # 标题（# 后必须有空格，避免匹配 ### 这样的标题）
+        if re.match(r'^#{1,6}\s', line):
+            return "header"
+
+        # 列表（无序：- * +，有序：数字.）
+        if re.match(r'^\s*[-*+]\s', line) or re.match(r'^\s*\d+\.\s', line):
+            return "list"
+
+        # 默认为段落
+        return "paragraph"
+
+    def _get_target_blanks(self, current_type: str, next_type: str) -> int:
+        """
+        根据当前行和下一行类型，决定目标空行数
+
+        Args:
+            current_type: 当前行类型
+            next_type: 下一行类型
+
+        Returns:
+            应保留的空行数
+        """
+        # 标题前: 1 个空行
+        if next_type == "header":
+            return 1
+        # 段落间: 1 个空行
+        if current_type == "paragraph" and next_type == "paragraph":
+            return 1
+        # 其他情况: 0 个空行
+        return 0
+
+    def _smart_unify_blank_lines(self, lines: List[str]) -> List[str]:
+        """
+        智能统一空行（基于上下文语义）
+
+        规则：
+        - 标题前: 1 个空行
+        - 标题后: 0 个空行
+        - 代码块前: 0 个空行
+        - 代码块后: 0 个空行
+        - 列表间: 0 个空行
+        - 段落间: 1 个空行
 
         Args:
             lines: 行列表
@@ -217,22 +285,67 @@ class MarkdownFormatter:
         Returns:
             处理后的行列表
         """
-        result = []
-        blank_count = 0
-        original_blank_count = 0
+        if not lines:
+            return lines
+
+        # 第一遍：分类所有行
+        line_types = []
+        in_code_block = False
 
         for line in lines:
-            if line == '':
-                blank_count += 1
-                original_blank_count += 1
-                if blank_count <= 2:
-                    result.append(line)
+            line_type = self._classify_line(line, in_code_block)
+
+            # 跟踪代码块状态
+            if line_type == "code_fence":
+                in_code_block = not in_code_block
+
+            line_types.append(line_type)
+
+        # 第二遍：根据类型决定保留哪些空行
+        result = []
+        i = 0
+        last_non_empty_type = None  # 追踪最后一个非空行的类型
+
+        while i < len(lines):
+            current_line = lines[i]
+            current_type = line_types[i]
+
+            # 非空行直接添加
+            if current_type != "empty":
+                result.append(current_line)
+                last_non_empty_type = current_type
+                i += 1
+                continue
+
+            # 是空行，需要判断是否保留
+            # 查找下一个非空行的类型
+            j = i + 1
+            while j < len(lines) and line_types[j] == "empty":
+                j += 1
+
+            # 找到下一个非空行
+            if j < len(lines):
+                next_type = line_types[j]
+                prev_type = last_non_empty_type if last_non_empty_type else "header"
+
+                target_blanks = self._get_target_blanks(prev_type, next_type)
+
+                # 统计移除的空行数
+                removed_count = (j - i) - target_blanks
+                if removed_count > 0:
+                    self.stats["blank_lines_normalized"] += removed_count
+
+                # 保留目标数量的空行
+                for _ in range(target_blanks):
+                    result.append("")
+
+                i = j
             else:
-                # 统计实际移除的空行数
-                if blank_count > 2:
-                    self.stats["blank_lines_removed"] += (blank_count - 2)
-                blank_count = 0
-                result.append(line)
+                # 到达文档末尾，丢弃所有尾部空行
+                removed_count = j - i
+                if removed_count > 0:
+                    self.stats["blank_lines_normalized"] += removed_count
+                break
 
         return result
 
@@ -243,8 +356,8 @@ class MarkdownFormatter:
             return
 
         print("  格式化结果:")
-        if self.stats["blank_lines_removed"] > 0:
-            print(f"    ✓ 统一空行: 移除 {self.stats['blank_lines_removed']} 个多余空行")
+        if self.stats["blank_lines_normalized"] > 0:
+            print(f"    ✓ 统一空行: 规范化 {self.stats['blank_lines_normalized']} 个空行")
         if self.stats["trailing_spaces_trimmed"] > 0:
             print(f"    ✓ 清理行尾空格: {self.stats['trailing_spaces_trimmed']} 行")
         if self.stats["headers_normalized"] > 0:
