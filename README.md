@@ -1,207 +1,214 @@
+<div align="center">
+
 # Lark Wiki Hero
 
-飞书知识库智能管理工具 - 使用 Claude Code 技能自动化管理飞书知识库。
+**一句话，文档自动归位 -- 飞书知识库智能管理 Skill**
+
+[![飞书 CLI 创作者大赛](https://img.shields.io/badge/飞书CLI-创作者大赛-blue)](https://bytedance.larkoffice.com/docx/HWgKdWfeSoDw36xu7EYctBrUnsg)
+[![Version](https://img.shields.io/badge/version-2.0.0-green)]()
+
+[功能特性](#功能特性) · [真实案例](#真实案例) · [快速开始](#快速开始) · [安装](#安装)
+
+如果这个项目对你有帮助，请给一个 Star ⭐
+
+</div>
+
+---
+
+## 这是什么
+
+管理飞书知识库是一件痛苦的事：
+
+- 200+ 文档散落本地，手动分类上传要花半天
+- 知识库层级混乱，空分类、命名不一致到处都是
+- 文档格式五花八门，空行、标题、链接风格不统一
+
+**Lark Wiki Hero** 是一个飞书 CLI Skill，用一条自然语言指令解决这些问题：
+
+```
+/lark-wiki-hero 帮我把 notes 文件夹里的文档智能上传到飞书知识库
+```
+
+系统会自动阅读每篇文档、理解内容语义、匹配知识库最佳分类，然后批量上传。你只需要说一句话。
 
 ## 功能特性
 
-### 1. 智能上传（基于语义理解）🎯
-- 利用 Claude 的语义理解能力，自动分析文档内容
-- 匹配知识库最佳分类目录，准确率 95%+
-- 支持单文件和批量上传
+| 功能 | 做什么 | 怎么用 |
+|------|--------|--------|
+| **智能上传** | 语义分析文档内容，自动匹配知识库分类，准确率 95%+ | `/lark-wiki-hero 上传知识库` |
+| **知识库重构** | 分析结构问题（空分类、层级过深、命名混乱），一键优化 | `/lark-wiki-hero 整理知识库` |
+| **文档格式化** | 统一 Markdown 格式：空行、标题、列表、链接 | `/lark-wiki-hero 格式化文档` |
 
-### 2. 知识库重构 📊
-- 分析知识库结构，检测潜在问题
-- 识别空分类、命名不一致等问题
-- 生成优化建议并执行重构操作
+### 核心亮点：语义理解分类
 
-### 3. 文档格式化 📝
-- Markdown 格式化：统一空行、清理空格、标准化格式
-- 大文件检测（>100KB 自动跳过复杂格式化）
-
-## 安装
-
-```bash
-# 技能已安装到 ~/.claude/skills/lark-wiki-hero/
-```
-
-## 首次使用
-
-首次使用时，技能会自动询问您的知识库 URL：
+不同于关键词匹配，Lark Wiki Hero 利用大模型的语义理解能力来分类：
 
 ```
-请输入您的飞书知识库 URL: https://my.feishu.cn/wiki/xxxxx
+文档: "Python异步编程完全指南"
+  → 理解: 技术教程，面向想学 Python 的开发者
+  → 匹配知识库: "我要学" (学习教程类) ✓
+
+文档: "2026 Q1 季度行业报告"
+  → 理解: 行业分析报告，面向管理层
+  → 匹配知识库: "行业报告与政策趋势" ✓
 ```
 
-配置会保存到 `~/.claude/skills/lark-wiki-hero/config.json`。
-
-## 使用方式
-
-### 在 Claude Code 中触发
-
-使用以下关键词自动触发技能：
-
-**中文**：
-- "上传知识库"、"智能上传"、"批量上传文档"
-- "整理知识库"、"重构知识库"、"优化知识库"
-- "格式化 markdown"、"文档格式化"
-
-**英文**：
-- "upload to wiki"
-- "organize wiki"
-- "format markdown"
-
-### 直接运行脚本
-
-```bash
-# 智能上传
-cd ~/.claude/skills/lark-wiki-hero
-python3 scripts/uploader.py ~/Documents/notes/Python教程.md
-
-# 批量上传
-python3 scripts/uploader.py --dir ~/Documents/notes
-
-# 知识库分析
-python3 scripts/analyzer.py --analyze --verbose
-
-# Markdown 格式化
-python3 scripts/formatter.py messy_document.md
-
-# 批量格式化
-python3 scripts/formatter.py --dir ~/Documents/notes
-```
+分类准确率从 v1.0 的 88%（关键词匹配）提升到 v2.0 的 **95%+**。
 
 ## 真实案例
 
-### 案例 1：技术团队知识库整理
+### 智能上传
 
-**场景**：某 AI 创业公司技术团队积累了一年多的学习笔记和文档，散落在本地文件夹中，需要迁移到飞书知识库进行统一管理。
+**案例 1：新人入职文档归档**
 
-**问题**：
-- 200+ 个 Markdown 文档需要手动分类上传
-- 文档类型混杂：技术教程、产品文档、会议记录、行业报告
-- 手动分类耗时且容易出错
+HR 给你发了 50+ 份新人入职材料 -- 培训手册、产品介绍、制度规范、工具指南，文件名全是 `新建文档(1).md`、`会议纪要-最终版.md` 这种。你要把它们分门别类上传到知识库对应目录。
 
-**在 Claude Code 中执行**：
-```bash
-/lark-wiki-hero 帮我把 ~/Documents/notes 文件夹里的所有文档智能上传到飞书知识库
+手动操作：每个文件打开看一遍内容 → 判断属于哪个分类 → 上传。大约 **2 小时**。
+
+```
+/lark-wiki-hero 帮我把 onboarding-docs 下的文档智能上传到飞书知识库
 ```
 
-**使用 Lark Wiki Hero 后**：
-
-| 指标 | 使用前 | 使用后 | 提升 |
-|------|--------|--------|------|
-| 上传时间 | ~4 小时（手动） | ~3 分钟（智能） | **98%** |
-| 分类准确率 | ~70%（人工疲劳） | 95%+（语义理解） | **36%** |
-| 操作步骤 | 200+ 次手动操作 | 1 条命令 | **99%** |
-
-**结果**：200+ 文档自动分类到对应目录：
-- 技术教程 → "我要学"
-- 产品文档 → "产品资料"
-- 行业报告 → "行业分析"
-- 会议记录 → "会议纪要"
+3 分钟完成，自动分类到"培训材料"、"产品文档"、"制度规范"等目录。
 
 ---
 
-### 案例 2：个人知识库维护
+**案例 2：会议资料批量入库**
 
-**场景**：独立开发者长期积累的 GitHub 项目文档、学习笔记、思考随笔，需要定期整理和格式化。
+产品经理开完周会后，把 20+ 份 PRD、竞品分析、用户调研报告丢到一个共享文件夹。一周积累下来，文件夹里已经混了上百份不同类型的文档，再不整理就找不到了。
 
-**痛点**：
-- 不同来源的文档格式不统一（空行、标题、链接格式混乱）
-- 知识库目录层级过深（5-6 层），难以导航
-- 存在多个空分类文件夹
-
-**在 Claude Code 中执行**：
-```bash
-# 1. 格式化所有文档
-/lark-wiki-hero 帮我格式化 ~/Documents/wiki_notes 里的所有 markdown 文档
-
-# 2. 分析知识库结构问题
-/lark-wiki-hero 分析一下我的飞书知识库结构有什么问题
-
-# 3. 执行优化建议
-/lark-wiki-hero 执行你刚才分析出来的优化建议
+```
+/lark-wiki-hero 把 weekly-docs 下的所有文档上传到知识库
 ```
 
-**效果**：
-- ✅ 统一了 150+ 文档的 Markdown 格式
-- ✅ 清理了 8 个空分类文件夹
-- ✅ 规范化了 12 个命名不一致的节点
-- ✅ 将 5 层深度的目录扁平化为 3 层
+每份文档根据内容语义自动归入"产品需求"、"竞品分析"、"用户研究"等分类，不用逐个打开看。
 
 ---
 
-### 案例 3：企业文档迁移
+### 知识库重构
 
-**场景**：某 SaaS 公司从 Confluence 迁移到飞书知识库，需要迁移 500+ 页面文档。
+**案例 3：一年没整理的知识库**
 
-**挑战**：
-- 原平台分类体系与飞书不一致
-- 文档内容需要重新整理和格式化
-- 时间紧迫（1 周内完成）
-
-**在 Claude Code 中执行**：
-```bash
-/lark-wiki-hero 我有一批从 Confluence 导出的文档，帮我智能上传到飞书知识库，然后分析并优化知识库结构
-```
-
-**使用效果**：
+知识库用了大半年，大家随手建文件夹，命名风格五花八门 -- 有的叫"2024总结"，有的叫"2024 年度总结"，有的叫"24总结"，中文空格英文空格混用。还有 5 层深的嵌套目录，新人都找不到东西在哪。
 
 ```
-智能上传 → 批量处理 → 格式化 → 结构优化
-   ↓          ↓          ↓         ↓
- 500篇    自动分类    统一格式   清理空分类
-(95%准确率)   (3分钟)   (500篇)    (15个)
+/lark-wiki-hero 分析一下我的知识库结构有什么问题
 ```
 
-**时间对比**：
-- 传统方式：~40 小时（手动分类 + 格式化）
-- Lark Wiki Hero：~2 小时（含人工复核）
+自动检测出：8 个命名不一致节点、5 个空分类、3 个超过 4 层的深目录。确认后一键修复。
 
 ---
+
+**案例 4：从 Notion/Confluence 迁移后的大扫除**
+
+团队从 Notion 迁移到飞书知识库，导出了 300+ 页面。迁移后目录结构跟 Notion 原版一样 -- 分类逻辑对不上飞书的使用习惯，还遗留了一堆空文件夹和临时节点。
+
+```
+/lark-wiki-hero 分析知识库结构，然后执行优化
+```
+
+清理空分类 15 个、重命名不一致节点 12 个、扁平化过深层级，知识库从"别人家的迁移残留"变成"自己人能看懂的结构"。
+
+---
+
+### 文档格式化
+
+**案例 5：多人协作的格式灾难**
+
+团队 5 个人都在往知识库写文档。小王从 Word 复制粘贴，标题用全角空格；小李从网页复制，带一堆 `&nbsp;`；老张习惯标题前不加空格。打开知识库一看，同样的标题有 4 种写法。
+
+```
+/lark-wiki-hero 帮我格式化 wiki-docs 下的所有 markdown
+```
+
+统一空行规范、标准化标题格式（`#标题` → `# 标题`）、清理行尾空格、修复列表缩进。150+ 文档一次搞定。
+
+---
+
+**案例 6：批量导入后的格式修复**
+
+用工具从其他平台批量导入了一批 Markdown 到飞书，结果打开一看：标题和正文之间没有空行、列表项缩进混乱、链接格式不统一。手动逐个改要改到怀疑人生。
+
+```
+/lark-wiki-hero 格式化 imported-docs 下的文档
+```
+
+自动修复所有格式问题，大文件（>100KB）智能跳过复杂处理，避免误伤。
+
+---
+
+## 快速开始
+
+### 前置条件
+
+- [飞书 CLI](https://github.com/larksuite/cli) 已安装并完成 `lark-cli auth login`
+- [Claude Code](https://claude.ai/claude-code) 已安装
+- Python 3.9+
+
+### 安装
+
+```bash
+git clone https://github.com/akira82-ai/lark-wiki-hero.git ~/.claude/skills/lark-wiki-hero
+```
+
+### 使用
+
+在 Claude Code 中输入 `/lark-wiki-hero` 加上你的需求：
+
+```
+/lark-wiki-hero 帮我把 notes 文件夹里的文档上传到飞书知识库
+/lark-wiki-hero 分析一下我的知识库结构有什么问题
+/lark-wiki-hero 格式化 wiki-docs 下的所有 markdown
+```
+
+首次使用会提示配置知识库 URL，之后即可直接使用。
+
+## 架构
+
+```
+用户 → /lark-wiki-hero <自然语言指令>
+                ↓
+         语义理解 + API 调用
+                ↓
+    ┌───────────┼───────────┐
+    ↓           ↓           ↓
+ lark_api    uploader    formatter
+ analyzer    optimizer
+    ↓
+ lark-cli → 飞书 OpenAPI → 知识库
+```
+
+技术栈：Python 3.9+ / [lark-cli](https://github.com/larksuite/cli) / 飞书 OpenAPI
 
 ## 技能结构
 
 ```
 ~/.claude/skills/lark-wiki-hero/
-├── SKILL.md                 # 技能定义（Claude Code 读取）
-├── config.json              # 配置文件（首次使用自动生成）
-├── README.md                # 本文件
+├── SKILL.md                 # 技能定义
+├── config.json              # 配置（首次使用自动生成）
+├── README.md
 └── scripts/
-    ├── __init__.py
-    ├── lark_api.py          # Lark API 封装
-    ├── uploader.py          # 批量上传
-    ├── formatter.py         # Markdown 格式化
+    ├── lark_api.py          # 飞书 API 封装
+    ├── uploader.py          # 智能上传
     ├── analyzer.py          # 结构分析
-    └── optimizer.py         # 优化执行
+    ├── optimizer.py         # 优化执行
+    └── formatter.py         # 文档格式化
 ```
-
-## 依赖要求
-
-- Python 3.9+
-- lark-cli（飞书官方 CLI 工具）
-- 已通过 `lark-cli auth login` 完成认证
 
 ## 权限要求
 
 | 操作 | 所需 scope |
 |------|-----------|
-| 创建节点 | `wiki:node:create` 或 `wiki:wiki` |
-| 读取节点 | `wiki:node:read` 或 `wiki:wiki:readonly` |
-| 更新节点 | `wiki:node:update` 或 `wiki:wiki` |
-| 删除节点 | `wiki:node:delete` 或 `wiki:wiki` |
-| 移动节点 | `wiki:node:move` 或 `wiki:wiki` |
+| 创建/读取/更新/删除/移动节点 | `wiki:wiki`（完整权限） |
 
-## 作者
+## 致谢
 
-磊叔 (AIRay1015)
+- [飞书 CLI](https://github.com/larksuite/cli) -- 飞书官方 CLI 工具
 
-## 版本
+## License
 
-2.0.0
+MIT
 
-**v2.0.0 更新**：
-- 分类逻辑从关键词匹配升级为 Claude 语义理解
-- 分类准确率从 88% 提升到 95%+
-- 移除了关键词分类器（classifier.py）和命名学习（naming.py）
-- 简化为三大核心功能：智能上传、知识库重构、文档格式化
+---
+
+**作者**：磊叔 (AIRay1015) | 微信：AIRay1015 | [github.com/akira82-ai](https://github.com/akira82-ai)
