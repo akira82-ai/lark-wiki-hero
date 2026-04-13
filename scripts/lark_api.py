@@ -206,7 +206,7 @@ def load_config() -> Dict[str, Any]:
             f"请先初始化配置:\n"
             f"  python3 {Path(__file__).parent}/lark_api.py --init\n"
             f"\n"
-            f"或在 Claude Code 中运行此技能时，会自动引导您完成配置。"
+            f"或在 AI 编码工具中运行此技能时，会自动引导您完成配置。"
         )
 
     try:
@@ -608,7 +608,7 @@ def check_and_prompt_config() -> bool:
     if not CONFIG_PATH.exists():
         print("⚠️ 配置文件不存在，需要初始化配置")
         print()
-        print("在 Claude Code/Cowork 中使用时，请提供您的飞书知识库 URL。")
+        print("在 AI 编码工具中使用时，请提供您的飞书知识库 URL。")
         print()
         print("知识库 URL 格式: https://my.feishu.cn/wiki/<token>")
         print()

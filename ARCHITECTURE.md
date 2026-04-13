@@ -4,15 +4,15 @@
 
 ```mermaid
 graph TB
-    User[用户] -->|自然语言请求| Claude[Claude Code]
-    Claude -->|触发| Skill[lark-wiki-hero 技能]
+    User[用户] -->|自然语言请求| Agent[AI 编码助手]
+    Agent -->|触发| Skill[lark-wiki-hero 技能]
     Skill -->|调用| Scripts[Python 脚本]
-    Scripts -->|语义分析| Claude
+    Scripts -->|语义分析| Agent
     Scripts -->|API 调用| LarkCLI[lark-cli]
     LarkCLI -->|HTTP| Feishu[飞书 API]
     Feishu --> Wiki[飞书知识库]
 
-    Style Claude fill:#f9f,stroke:#333,stroke-width:2px
+    Style Agent fill:#f9f,stroke:#333,stroke-width:2px
     Style Skill fill:#bbf,stroke:#333,stroke-width:2px
     Style Wiki fill:#bfb,stroke:#333,stroke-width:2px
 ```
@@ -23,7 +23,7 @@ graph TB
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    Claude Code                           │
+│                    AI 编码助手                          │
 ├─────────────────────────────────────────────────────────┤
 │  1. 获取知识库结构（lark_api.py --get-structure）        │
 │     - 支持完整层级结构（最多 20 层）                     │
@@ -31,7 +31,7 @@ graph TB
 │                                                          │
 │  2. 读取文档内容（Read 工具）                             │
 │                                                          │
-│  3. Claude 语义分析：                                     │
+│  3. AI 语义分析：                                      │
 │     - 主题类型（技术教程/产品文档/行业报告...）           │
 │     - 内容性质（原创/转载/工作文档...）                   │
 │     - 目标受众（开发者/产品经理/普通用户...）             │
@@ -71,7 +71,7 @@ graph TB
 |------|------|
 | 单文件上传 | 上传单个 Markdown 文件 |
 | 批量上传 | 上传整个目录 |
-| 自动分类 | 基于 Claude 语义理解 |
+| 自动分类 | 基于 AI 语义理解 |
 | API 限流 | 自动延迟 1000ms |
 | 进度显示 | [1/5] 格式进度提示 |
 
@@ -107,7 +107,7 @@ graph TB
 
 | 组件 | 技术 |
 |------|------|
-| 技能框架 | Claude Code Skills |
+| 技能框架 | AI Agent Skills (Claude Code / Codex / OpenClaw) |
 | 编程语言 | Python 3.9+ |
 | CLI 工具 | lark-cli 1.0.9+ |
 | API | 飞书 OpenAPI |
