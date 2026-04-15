@@ -5,7 +5,7 @@
 **一句话，文档自动归位 -- 飞书知识库智能管理 Skill**
 
 [![飞书 CLI 创作者大赛](https://img.shields.io/badge/飞书CLI-创作者大赛-blue)](https://bytedance.larkoffice.com/docx/HWgKdWfeSoDw36xu7EYctBrUnsg)
-[![Version](https://img.shields.io/badge/version-2.1.0-green)]()
+[![Version](https://img.shields.io/badge/version-2.2.0-green)]()
 
 [功能特性](#功能特性) · [真实案例](#真实案例) · [快速开始](#快速开始) · [安装](#安装)
 

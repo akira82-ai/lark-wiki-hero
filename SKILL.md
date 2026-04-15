@@ -270,272 +270,81 @@ AI 根据以下因素进行分类：
 
 ## 功能二：智能上传（基于语义理解）
 
-自动分析文档内容，利用大模型的语义理解能力，将文件上传到知识库最匹配的分类目录。
+根据功能 1 的分类结果，将文件上传到知识库指定的分类目录下。
 
 ### 核心设计原则
 
-> **重要**：本功能的分类逻辑依赖于 AI 助手（大模型）的语义理解能力，而不是基于关键词匹配的脚本。
+> **重要**：本功能的知识库操作能力，严格基于 lark-cli API 的要求，参考 [`lark-wiki-cli-reference.md`](./lark-wiki-cli-reference.md)。
 
-### 工作流程
+### 前置条件
 
-当用户请求上传文档时，按以下步骤执行：
+**必须先完成功能 1**，功能 2 依赖 `config/categorize_result.json` 中的分类结果。
 
-#### 步骤 1：获取所有可用分类
+如果用户直接请求上传而未经过功能 1，先询问用户是否要先进行分类。
 
-```bash
-python3 {baseDir}/scripts/lark_api.py --list-parents
-```
+### 执行步骤
 
-**输出示例**：
-```
-知识库非叶子节点（可作为父节点）：
+1. **读取分类结果**：从 `config/categorize_result.json` 读取功能 1 的分类结果
+2. **生成执行计划**：根据分类结果和文件类型，生成上传命令计划，存入 `config/upload_plan.json`
+3. **执行上传**：根据 `upload_plan.json` 逐一执行上传命令
+4. **返回结果**：汇总上传结果，返回文档链接列表
 
-📂 磊叔原创
-   Token: LRMHwS2kFiHAHzkGn9ccSUz4nRh
-   类型: docx
+### 文件类型与上传方式
 
-📂 我要学
-   Token: OW8NwuLTOiRp7BkwckicSYUDnle
-   类型: docx
-
-📂 我要用
-   Token: VamIwcJiMi1HNckKnF5cXA6an1b
-   类型: docx
-...
-```
-
-**注意**：这些节点都有子节点（`has_child: true`），可以作为上传目标的父节点。
-
-#### 步骤 2：分析文档内容
-
-**对于 PDF 文件**：
-```bash
-pdftotext "/path/to/file.pdf" - | head -100
-```
-
-**对于 Markdown/文本文件**：
-使用 Read 工具直接读取前 500-1000 字符
-
-**理解以下信息**：
-- **标题/文件名**：反映文档主题
-- **内容性质**：技术教程、产品文档、学术报告、工作文档等
-- **目标受众**：开发者、产品经理、普通用户、内部员工等
-- **关键概念**：提取核心关键词和概念
-
-#### 步骤 3：智能分类匹配（关键词 40% + AI 语义 60%）
-
-**3.1 关键词匹配（40%）**
-
-使用 jieba 分词库提取文档关键词，与分类路径进行匹配：
-
-```python
-from keyword_matcher import match_categories_by_keywords
-
-# 提取文档关键词
-keywords = extract_keywords(document_text, top_k=30)
-
-# 匹配分类
-keyword_scores = match_categories_by_keywords(
-    text=document_text,
-    categories=parent_nodes
-)
-```
-
-**输出示例**：
-```
-关键词: OpenClaw, AI Agent, 北京航空航天大学, 清华大学, 企业应用
-
-关键词匹配结果：
-1. 我要找/AI Agent 研究: 15.74%
-2. 磊叔原创: 8.32%
-3. 行业报告与政策趋势: 5.21%
-```
-
-**3.2 AI 语义理解（60%）**
-
-**利用你的语义理解能力**，综合分析文档信息并匹配分类：
-
-**分析维度**：
-1. **作者关联**：文档作者与知识库所有者的关系
-2. **主题类型**：技术类、产品类、管理类、研究类等
-3. **内容性质**：教程、报告、规范、参考资料等
-4. **目标受众**：开发者、产品经理、普通用户、内部员工等
-5. **领域专长**：AI、编程、设计、营销等特定领域
-
-**分析流程**：
-
-```
-文档信息：
-  标题: 北京航空航天大学&清华大学-OpenClaw在企业办公中的应用.pdf
-  作者: @新媒沈阳 团队
-  机构: 北京航空航天大学、清华大学
-  主题: OpenClaw (AI Agent) 在企业场景的应用
-  性质: 学术研究报告（科普性质）
-
-AI 语义分析:
-  1. 作者关联分析:
-     - @新媒沈阳 = 磊叔 ✓ 强关联
-     - 学术合作研究 → 磊叔原创 ✓
-
-  2. 主题类型分析:
-     - OpenClaw = 磊叔的工具 ✓
-     - AI Agent = 技术研究 ✓
-     - 企业应用 = 实践案例 ✓
-
-  3. 内容性质分析:
-     - 学术研究报告 → 研究类 ✓
-     - 科普性质 → 教程/学习类 ✓
-     - 企业场景 → 实践应用 ✓
-
-  4. 分类匹配评分:
-     磊叔原创/深度教程        → 95分 (作者+主题+性质完美匹配)
-     磊叔原创                → 85分 (作者+主题匹配)
-     我要找/AI Agent 研究    → 75分 (主题匹配)
-     行业报告与政策趋势      → 70分 (性质匹配)
-
-  5. 最终推荐:
-     首选: 磊叔原创/深度教程
-     理由: 这是磊叔团队(@新媒沈阳)的学术合作研究，
-           关于 OpenClaw 的深度技术分析，
-           符合"深度教程"的定位。
-```
-
-**3.3 综合评分（40% + 60%）**
-
-```python
-# 关键词匹配分数（40%）
-keyword_score = 15.74%  # "我要找/AI Agent 研究"
-
-# AI 语义评分（60%）
-semantic_score = 95  # "磊叔原创/深度教程" (满分100)
-
-# 综合分数
-final_score = keyword_score * 0.4 + (semantic_score / 100) * 0.6
-
-# 输出最终推荐
-print(f"推荐分类: 磊叔原创/深度教程")
-print(f"综合评分: {final_score:.2%}")
-print(f"  关键词匹配: 15.74% (40%)")
-print(f"  AI 语义评分: 95/100 (60%)")
-```
-
-#### 步骤 4：执行上传
-
-**根据文件类型选择上传方式**：
-
-**A. PDF 文件上传**（保留原始格式）
-
-PDF 不能直接作为 wiki 节点，需要：**创建文档 → 插入 PDF**
-
-```bash
-# 步骤 1：创建空文档
-lark-cli docs +create \
-  --title "文档标题" \
-  --markdown "# 文档标题\n\n" \
-  --wiki-node <父节点token>
-
-# 步骤 2：复制 PDF 到当前目录（lark-cli 要求相对路径）
-cp "/原始路径/文件.pdf" ./temp.pdf
-
-# 步骤 3：插入 PDF 到文档
-lark-cli docs +media-insert \
-  --doc <文档URL> \
-  --file ./temp.pdf \
-  --type file
-
-# 步骤 4：清理临时文件
-rm ./temp.pdf
-```
-
-或使用封装好的函数：
-```python
-from lark_api import upload_pdf_to_wiki
-
-upload_pdf_to_wiki(
-    pdf_path="/path/to/file.pdf",
-    title="文档标题",
-    parent_node_token="<父节点token>"
-)
-```
-
-**B. Markdown 文件上传**
-
-```bash
-lark-cli docs +create \
-  --title "文档标题" \
-  --markdown "$(cat 文档内容)" \
-  --wiki-node <父节点token>
-```
+| 文件类型 | 上传方式 |
+|---------|---------|
+| `.pdf` | 多步操作（参考 lark-wiki-cli-reference.md 模块二） |
+| `.md` / `.mdx` / `.txt` | 单一命令（参考 lark-wiki-cli-reference.md 模块一） |
 
 ### 执行示例
 
-**用户请求**：
+**用户请求**（PDF）：
 > "上传这个文档：OpenClaw在企业办公中的应用.pdf"
 
-**你的执行流程**：
-
 ```
-1. 检查配置 ✓
-2. 获取所有可用分类:
-   📂 磊叔原创 (LRMHwS2kFiHAHzkGn9ccSUz4nRh)
-   📂 我要学 (OW8NwuLTOiRp7BkwckicSYUDnle)
-   📂 我要用 (VamIwcJiMi1HNckKnF5cXA6an1b)
-   ...
-
-3. 分析文档:
-   - 标题: OpenClaw在企业办公中的应用.pdf
-   - 内容预览: 使用 pdftotext 提取前 500 字
-   - 理解: 这是一份关于 OpenClaw 的学术研究报告（北航&清华）
-
-4. AI 语义匹配:
-   → 首选: "磊叔原创" (因为 OpenClaw 是磊叔的工具)
-   → 理由: 这是磊叔参与的学术合作研究
-
-5. 向用户说明:
-   "这是一份关于 OpenClaw 的学术研究报告。
-    建议上传到「磊叔原创」分类。
-    是否继续？"
-
-6. 用户确认后执行上传:
-   - 使用 upload_pdf_to_wiki() 函数
-   - 创建文档 → 插入 PDF
-   - 返回文档链接
-```
-   - 磊叔原创
-   - 行业报告与政策趋势
-   ...
-
-3. 读取文档: Python教程.md
-   → 内容: Python asyncio 库使用指南...
-
-4. 语义分析:
-   - 这是一份技术教程
-   - 适合想学习 Python 的开发者
-   - 应该归类为学习材料
-
-5. 分类决策:
-   → 最佳匹配: "我要学"
-
-6. 执行上传:
-   lark-cli docs +create --title "Python教程.md" \
-     --wiki-node <我要学的token> --markdown "..."
+1. 读取 categorize_result.json → token: LRMHwS2kFiHAHzkGn9ccSUz4nRh
+2. 生成 upload_plan.json:
+   {
+     "file": "OpenClaw在企业办公中的应用.pdf",
+     "type": "pdf",
+     "steps": [
+       {"step": 1, "command": "lark-cli api POST ... --data '{\"parent_node_token\": \"LRMHwS2kFiHAHzkGn9ccSUz4nRh\", ...}'", "note": "创建文档节点"},
+       {"step": 2, "command": "cp \"./OpenClaw在企业办公中的应用.pdf\" ./temp_upload.pdf", "note": "复制 PDF 到当前目录"},
+       {"step": 3, "command": "lark-cli docs +media-insert ...", "note": "插入 PDF 到文档"},
+       {"step": 4, "command": "rm ./temp_upload.pdf", "note": "清理临时文件"}
+     ]
+   }
+3. 执行上传（参考 lark-wiki-cli-reference.md 模块二）
+4. 返回文档链接
 ```
 
-### 批量上传处理
+**用户请求**（Markdown）：
+> "上传这份教程：Python异步编程.md"
 
-对于批量上传请求：
-
-1. 扫描目录获取所有 Markdown 文件
-2. 对每个文件重复上述步骤 2-4
-3. 为每个文件选择最合适的分类（可能不同）
-4. 添加延迟避免 API 限流（每个文件间等待 1 秒）
+```
+1. 读取 categorize_result.json → token: OW8NwuLTOiRp7BkwckicSYUDnle
+2. 生成 upload_plan.json:
+   {
+     "file": "Python异步编程.md",
+     "type": "markdown",
+     "command": "lark-cli api POST \"/open-apis/wiki/v2/spaces/{space_id}/nodes\" --data '{\"parent_node_token\": \"OW8NwuLTOiRp7BkwckicSYUDnle\", \"obj_type\": \"docx\", \"node_type\": \"origin\", \"title\": \"Python异步编程\"}'"
+   }
+3. 执行上传（参考 lark-wiki-cli-reference.md 模块一）
+4. 返回文档链接
+```
 
 ### 特殊情况处理
 
+**categorize_result.json 不存在时**：
+- 询问用户："请先运行功能 1 进行智能分类"
+- 或使用根目录（`parent_node_token` 为空）
+
+**note 字段包含新建分类建议时**：
+- 如果 `note` 非空（如 `建议在"磊叔原创"下新建"AI研究"分类`），先调用 `create_node` 在指定父节点下创建分类目录，再用新 token 执行上传
+
 **无法确定分类时**：
-- 如果文档内容模糊或难以分类
 - 询问用户："这个文档应该放在哪个分类下？"
-- 或默认使用根目录/默认父节点
+- 或默认使用根目录
 
 **知识库无分类结构时**：
 - 直接上传到根目录
@@ -648,138 +457,6 @@ python3 {baseDir}/scripts/formatter.py messy_document.md
 ```bash
 lark-cli auth login --domain <your-domain>
 ```
-
-## 智能上传完整流程（推荐）
-
-当用户触发 `/lark-wiki-hero` 命令时，按以下步骤执行：
-
-### 步骤 1：初始化和配置检查
-
-```bash
-python3 {baseDir}/scripts/lark_api.py --check
-```
-
-如果配置无效，按"首次使用流程"进行配置。
-
-### 步骤 2：加载知识库分类
-
-```bash
-python3 {baseDir}/scripts/1-smart-categorize.py --file <文件路径>
-python3 {baseDir}/scripts/2-smart-upload.py <文件路径>
-```
-
-自动加载缓存的分类列表（3 层非叶子节点）。
-
-### 步骤 3：文件分析
-
-扫描文件并提取内容：
-- PDF：使用 `pdftotext` 提取前 2000 字符
-- Markdown/文本：读取前 2000 字符
-
-### 步骤 4：关键词匹配（40%）
-
-使用 jieba 分词库提取关键词并匹配分类。
-
-### 步骤 5：AI 语义分析（60%）
-
-**AI 助手（你）基于以下信息进行语义分析**：
-
-1. **文档信息**：文件名、类型、大小、内容预览
-2. **可用分类**：知识库的 3 层分类结构（最多 50 个分类）
-
-**分析维度**：
-- 作者关联：文档作者与知识库所有者的关系
-- 主题类型：技术类、产品类、管理类、研究类等
-- 内容性质：教程、报告、规范、参考资料等
-- 目标受众：开发者、产品经理、普通用户、内部员工等
-- 领域专长：AI、编程、设计、营销等特定领域
-
-**输出格式**（JSON）：
-```json
-{
-  "recommendations": [
-    {"path": "磊叔原创/深度教程", "token": "Ioy6w0cu7ishXgkVYB0c8rRinyh", "score": 95, "reason": "磊叔团队的学术研究，关于 OpenClaw 的深度分析"},
-    {"path": "我要找/AI Agent 研究", "token": "MGzawYuq5i8UkBkbi5xc8J3Rnyd", "score": 75, "reason": "AI Agent 相关研究"}
-  ]
-}
-```
-
-### 步骤 6：自动整合（40% + 60%）
-
-系统自动整合关键词匹配和 AI 语义分析结果：
-
-```
-综合分数 = 关键词匹配分数 × 0.4 + AI 语义分数 ÷ 100 × 0.6
-```
-
-输出 TOP 3 推荐，包含：
-- 分类路径
-- 节点 Token
-- 关键词匹配分数
-- AI 语义分数
-- 综合分数
-- 推荐理由
-
-### 步骤 7：用户确认（AskUserQuestion）
-
-使用 AskUserQuestion 工具向用户确认：
-
-```
-文件: 北京航空航天大学&清华大学-OpenClaw在企业办公中的应用.pdf
-
-推荐分类: 磊叔原创/深度教程
-Token: Ioy6w0cu7ishXgkVYB0c8rRinyh
-综合分数: 57.00%
-
-理由: 这是磊叔团队(@新媒沈阳)的学术合作研究，
-      关于 OpenClaw 的深度技术分析。
-
-是否选择此分类？
-选项:
-1. 确认上传
-2. 选择其他分类
-3. 跳过此文件
-```
-
-### 步骤 8：执行上传
-
-根据用户确认：
-
-**选项 1 - 确认上传**：
-- PDF：使用 `upload_pdf_to_wiki()` 保留原始格式
-- Markdown：使用 `create_document()` 转换为文档
-
-**选项 2 - 选择其他分类**：
-- 显示所有可用分类供用户选择
-- 重新执行上传
-
-**选项 3 - 跳过**：
-- 跳过当前文件，处理下一个
-
-### 步骤 9：批量处理
-
-如果用户提供了多个文件或目录，重复步骤 3-8，每个文件间添加 1 秒延迟。
-
-### 步骤 10：上传总结
-
-显示上传结果统计：
-- 成功上传数量
-- 失败数量
-- 文档链接列表
-
----
-
-## 触发关键词
-
-**中文**：
-- "上传知识库"、"智能上传"、"批量上传文档"
-- "整理知识库"、"重构知识库"、"优化知识库"
-- "格式化 markdown"、"文档格式化"
-
-**英文**：
-- "upload to wiki", "smart upload", "batch upload"
-- "organize wiki", "restructure wiki"
-- "preprocess document", "format markdown"
 
 ## 注意事项
 
