@@ -19,9 +19,9 @@ author: 磊叔 (AIRay1015)
 ═══════════════════════════════════════════════════════════════
 磊叔 │ 微信：AIRay1015 │ github.com/akira82-ai
 ────────────────────────────────────────────────────────────
-🎯 自动分类：说一句话，文档自动上传到正确位置
-📊 一键整理：发现知识库问题并自动修复
-📝 批量格式化：统一所有文档格式
+🎯 自动分类：AI 语义分析，自动推荐最佳分类路径
+📤 智能上传：文档自动上传到正确的知识库目录
+📊 知识库分析：结构诊断 + 健康度评分 + 问题检测
 ✨ 操作前预览，确认后才执行
 ═══════════════════════════════════════════════════════════════
 最后更新：2026-04-15
@@ -163,12 +163,11 @@ python3 {baseDir}/scripts/lark_api.py --init
 
 ## 功能概述
 
-Lark Wiki Hero 是一个智能飞书知识库管理工具，提供四大核心功能：
+Lark Wiki Hero 是一个智能飞书知识库管理工具，提供三大核心功能：
 
 1. **智能分类** - AI 语义分析，自动推荐最佳分类路径
 2. **智能上传** - 基于语义理解自动分析文档内容，匹配知识库最佳分类目录
-3. **知识库重构** - 分析知识库结构，检测问题并生成优化方案
-4. **文档格式化** - 统一和优化 Markdown 文档格式
+3. **知识库分析** - 全面分析知识库结构，生成健康度评分和问题诊断报告
 
 ---
 
@@ -350,22 +349,58 @@ AI 根据以下因素进行分类：
 - 直接上传到根目录
 - 提示用户："建议创建分类目录以更好地组织文档"
 
-## 功能三：知识库重构
+## 功能三：知识库分析
 
-分析知识库结构，检测问题并生成优化方案。
+对知识库进行全面分析，包括结构诊断、健康度评分和问题检测。
+
+**⚠️ 重要：本功能必须实时获取知识库数据，不得依赖 `wiki_nodes.json` 缓存文件。**
+
+### 分析流程
+
+1. **遍历所有节点** - 实时获取完整知识库结构
+2. **量化打分** - 从结构健康度、组织规范度、内容丰富度三个维度评分
+3. **诊断具体问题** - 检测深层级、孤立节点、命名不一致等问题
+4. **输出完整报告** - 控制台可视化 + JSON 数据 + Markdown 文档
 
 ### 使用方式
 
 ```bash
-# 分析结构
-python3 {baseDir}/scripts/analyzer.py --analyze
-
-# 显示详细报告
+# 分析知识库（自动保存 JSON 和 Markdown 报告到 ./reports/）
 python3 {baseDir}/scripts/analyzer.py --analyze --verbose
 
-# 执行优化（会生成计划并询问确认）
-python3 {baseDir}/scripts/optimizer.py --execute
+# 指定输出目录
+python3 {baseDir}/scripts/analyzer.py --analyze -o ./custom_reports
 ```
+
+### 评分体系
+
+| 维度 | 权重 | 说明 |
+|------|------|------|
+| **结构健康度** | 40% | 层级合理性、深度分布 |
+| **组织规范度** | 35% | 孤立节点、空分类检测 |
+| **内容丰富度** | 25% | 节点数量、类型多样性 |
+
+### 评分等级
+
+| 等级 | 分数范围 | 说明 |
+|------|---------|------|
+| **S** | 95-100 | 优秀 - 知识库状态极佳 |
+| **A** | 85-94 | 良好 - 健康度高，有小问题 |
+| **B** | 70-84 | 中等 - 存在明显问题需改进 |
+| **C** | 60-69 | 较差 - 多项指标不达标 |
+| **D** | <60 | 不健康 - 需要全面重构 |
+
+### 输出报告
+
+分析器会实时获取数据并生成以下报告：
+
+- **控制台输出**：可视化文本报告（评分、进度条、状态图标）
+- **JSON 文件**：结构化数据，供后续处理或导入其他工具
+- **Markdown 文件**：格式化报告，适合文档归档
+
+**输出文件命名**：
+- `wiki_analysis_{timestamp}.json`
+- `wiki_analysis_{timestamp}.md`
 
 ### 检测的问题
 
@@ -374,73 +409,18 @@ python3 {baseDir}/scripts/optimizer.py --execute
 - **空分类** - 没有子节点的文件夹
 - **孤立节点** - 未正确分类的文档
 
-### 示例
+分析完成后，直接输出分析报告，不推荐任何下一步操作。
 
-```bash
-python3 {baseDir}/scripts/analyzer.py --analyze
-
-# 输出：
-# 知识库结构分析报告
-# ════════════════════════════════════════
-# 总节点数: 156
-# 最大深度: 5 层 ⚠️
-# 空分类: 8 个 ⚠️
-#
-# 发现的问题:
-# ❌ 层级过深: 5 个节点
-# ⚠️ 命名不一致: 12 个节点
-# ⚠️ 空分类: 8 个
-# ℹ️ 孤立节点: 3 个
-```
-
-## 功能四：文档格式化
-
-统一和优化 Markdown 文档格式。
-
-### 使用方式
-
-```bash
-# 格式化 Markdown 文件
-python3 {baseDir}/scripts/formatter.py path/to/document.md
-
-# 批量格式化目录
-python3 {baseDir}/scripts/formatter.py --dir path/to/directory
-```
-
-### Markdown 格式化规则
-
-- 统一空行（最多 2 个连续空行）
-- 去除行尾空格
-- 标准化标题格式（`#` 后添加空格）
-- 修复列表格式
-- 标准化链接格式
-- 大文档检测（>100KB 跳过复杂格式化）
-
-### 示例
-
-```bash
-# 格式化文档
-python3 {baseDir}/scripts/formatter.py messy_document.md
-
-# 输出：
-# 正在格式化: messy_document.md
-# 文件大小: 45KB
-# ✓ 统一空行: 移除 15 个多余空行
-# ✓ 清理行尾空格: 23 行
-# ✓ 标准化标题: 5 个
-# ✓ 已保存到: messy_document_formatted.md
-```
+---
 
 ## 命令速查表
 
 | 功能 | 命令 |
 |------|------|
+| 智能分类 | `python3 {baseDir}/scripts/classifier.py <files...>` |
 | 单文件上传 | `python3 {baseDir}/scripts/2-smart-upload.py <file>` |
 | 批量上传 | `python3 {baseDir}/scripts/2-smart-upload.py --tasks tasks.json` |
-| 分析结构 | `python3 {baseDir}/scripts/analyzer.py --analyze` |
-| 执行优化 | `python3 {baseDir}/scripts/optimizer.py --execute` |
-| 格式化 Markdown | `python3 {baseDir}/scripts/formatter.py <file.md>` |
-| 批量格式化 | `python3 {baseDir}/scripts/formatter.py --dir <dir>` |
+| 知识库分析 | `python3 {baseDir}/scripts/analyzer.py --analyze --verbose` |
 
 ## 权限要求
 

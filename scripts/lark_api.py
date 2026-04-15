@@ -537,6 +537,78 @@ def search_documents(query: str, page_size: int = 10) -> Optional[Dict]:
 # 节点树操作
 # ================================
 
+def fetch_all_nodes_live(max_depth: int = 10) -> List[Dict]:
+    """
+    实时递归获取知识库的所有节点（不依赖缓存）
+
+    ⚠️ 重要：本函数直接调用 lark-cli API 实时获取数据，
+    不得依赖 wiki_nodes.json 缓存文件。
+
+    Args:
+        max_depth: 最大递归深度
+
+    Returns:
+        完整的节点列表，每个节点包含：
+        - token: 节点 token
+        - title: 节点标题
+        - obj_type: 对象类型 (docx, bitable, etc.)
+        - obj_edit_time: 编辑时间戳
+        - has_child: 是否有子节点
+        - parent_node_token: 父节点 token
+        - depth: 层级深度
+        - path: 完整路径
+    """
+    space_id = get_space_id()
+    all_nodes = []
+
+    def fetch_recursive(parent_token: str = "", depth: int = 0, path: str = ""):
+        """递归获取节点"""
+        # 调用 API 获取当前层级的节点
+        path_param = f"/open-apis/wiki/v2/spaces/{space_id}/nodes"
+        params = {
+            "parent_node_token": parent_token,
+            "page_size": "50"  # API 限制：最大 50
+        }
+
+        result = lark_api("GET", path_param, params=params)
+
+        if not result or "data" not in result:
+            return
+
+        items = result["data"].get("items", [])
+
+        for item in items:
+            node_token = item.get("node_token", "")
+            title = item.get("title", "")
+            obj_type = item.get("obj_type", "")
+            obj_edit_time = item.get("obj_edit_time", "")
+            has_child = item.get("has_child", False)
+
+            # 构建完整路径
+            current_path = f"{path}/{title}" if path else title
+
+            # 添加到结果列表
+            all_nodes.append({
+                "token": node_token,
+                "title": title,
+                "obj_type": obj_type,
+                "obj_edit_time": obj_edit_time,
+                "has_child": has_child,
+                "parent_node_token": parent_token,
+                "depth": depth,
+                "path": current_path
+            })
+
+            # 如果有子节点且未达到最大深度，递归获取
+            if has_child and depth < max_depth:
+                fetch_recursive(node_token, depth + 1, current_path)
+
+    # 开始递归获取
+    fetch_recursive()
+
+    return all_nodes
+
+
 def build_node_tree(parent_token: str = "", max_depth: int = 10,
                    current_depth: int = 0) -> List[Dict]:
     """
