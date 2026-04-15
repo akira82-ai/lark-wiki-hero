@@ -195,7 +195,7 @@ upload_pdf_to_wiki(
 
 - 临时文件必须用完即删，避免污染工作目录
 - PDF 插入后文档内容为 PDF 预览，保留原始格式
-- 文档 URL 格式：`https://my.feishu.cn/wiki/{space_id}?node={node_token}`
+- 文档 URL 格式：`https://my.feishu.cn/wiki/{node_token}`
 
 ---
 

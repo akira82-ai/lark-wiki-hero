@@ -29,7 +29,8 @@ class Uploader:
         self.fail_count = 0
         self.results = []
 
-    def upload(self, file_path: str, parent_token: str, title: str = "") -> Dict:
+    def upload(self, file_path: str, parent_token: str, title: str = "",
+               target_path: str = "") -> Dict:
         """
         上传单个文件，根据扩展名选择上传方式
 
@@ -37,9 +38,10 @@ class Uploader:
             file_path: 文件路径
             parent_token: 目标父节点 token
             title: 文档标题（默认用文件名）
+            target_path: 目标分类路径（用于结果展示）
 
         Returns:
-            上传结果
+            上传结果（含 target_path）
         """
         path = Path(file_path)
         if not title:
@@ -63,26 +65,35 @@ class Uploader:
 
         if doc_url:
             self.success_count += 1
-            return {"file": path.name, "url": doc_url, "ok": True}
+            return {"file": path.name, "target_path": target_path,
+                    "doc_url": doc_url, "ok": True}
         else:
             self.fail_count += 1
-            return {"file": path.name, "url": None, "ok": False}
+            return {"file": path.name, "target_path": target_path,
+                    "doc_url": None, "ok": False}
 
     def summary(self) -> str:
+        """生成 Markdown 表格格式的上传结果"""
         total = self.success_count + self.fail_count
         lines = []
         lines.append("")
-        lines.append("=" * 60)
         lines.append("上传结果")
-        lines.append("=" * 60)
-        lines.append(f"总计: {total} | 成功: {self.success_count} | 失败: {self.fail_count}")
         lines.append("")
+        lines.append("| 文件名 | 目标位置 | 链接 |")
+        lines.append("|--------|---------|------|")
+
         for r in self.results:
-            status = "✓" if r["ok"] else "✗"
-            url = r["url"] or "(失败)"
-            lines.append(f"{status} {r['file']}")
-            if r["url"]:
-                lines.append(f"  → {r['url']}")
+            if r["doc_url"]:
+                # doc_url 格式: https://my.feishu.cn/wiki/{node_token}
+                node_token = r["doc_url"].rstrip("/").split("/")[-1]
+                link = f"[链接](https://my.feishu.cn/wiki/{node_token})"
+            else:
+                link = "—"
+            path_display = r["target_path"] or "—"
+            lines.append(f"| {r['file']} | {path_display} | {link} |")
+
+        lines.append("")
+        lines.append(f"总计 {total} | 成功 {self.success_count} | 失败 {self.fail_count}")
         return "\n".join(lines)
 
 
@@ -91,7 +102,7 @@ def upload_batch(tasks: List[Dict], delay: float = 1.0) -> Uploader:
     批量上传文件（逐文件执行）
 
     Args:
-        tasks: 上传任务列表，每项包含 file_path, parent_token, title
+        tasks: 上传任务列表，每项包含 file_path, parent_token, title, target_path
         delay: 每文件间隔秒数
 
     Returns:
@@ -109,11 +120,12 @@ def upload_batch(tasks: List[Dict], delay: float = 1.0) -> Uploader:
         path = Path(file_path)
 
         print(f"[{i}/{total}] {path.name}...")
-        result = uploader.upload(file_path, parent_token, title)
+        target = task.get("target_path", "")
+        result = uploader.upload(file_path, parent_token, title, target)
         uploader.results.append(result)
 
         if result["ok"]:
-            print(f"  ✓ {result['url']}")
+            print(f"  ✓ {result['doc_url']}")
         else:
             print(f"  ✗ 上传失败")
 

@@ -360,7 +360,7 @@ def create_document(title: str, parent_node_token: str = "",
         pass
 
     # 返回知识库节点 URL
-    return f"https://my.feishu.cn/wiki/{space_id}?node={node_token}"
+    return f"https://my.feishu.cn/wiki/{node_token}"
 
 
 def upload_pdf_to_wiki(pdf_path: str, title: str,
@@ -406,24 +406,25 @@ def upload_pdf_to_wiki(pdf_path: str, title: str,
         if not node_token or not obj_token:
             return None
 
-        doc_url = f"https://my.feishu.cn/wiki/{space_id}?node={node_token}"
+        doc_url = f"https://my.feishu.cn/wiki/{node_token}"
 
         # 2. 上传 PDF 文件到文档
-        # 使用 lark-cli 的文件上传功能（这个暂时保留，因为文件上传 API 较复杂）
-        # TODO: 改为纯 API 调用，需要调用：
-        # - POST /open-apis/docx/v1/documents/{document_id}/blocks/{block_id}/files
-        # - 需要先获取文档块结构
-
-        # 临时方案：使用 lark-cli 的媒体插入功能
-        temp_path = Path.cwd() / f"__temp_upload__{Path(pdf_path).name}"
+        # lark-cli docs +media-insert 要求：
+        # - 文件必须在当前工作目录（相对路径）
+        # - 文档 URL 使用 node_token
+        skill_dir = Path(__file__).parent.parent
+        temp_filename = f"__temp_upload__{Path(pdf_path).name}"
+        temp_path = skill_dir / temp_filename
+        orig_cwd = os.getcwd()
 
         try:
             shutil.copy2(pdf_path, temp_path)
+            os.chdir(skill_dir)
 
             cmd = [
                 "lark-cli", "docs", "+media-insert",
-                "--doc", doc_url,
-                "--file", f"./{temp_path.name}",
+                "--doc", f"https://my.feishu.cn/wiki/{node_token}",
+                "--file", f"./{temp_filename}",
                 "--type", "file"
             ]
 
@@ -435,15 +436,15 @@ def upload_pdf_to_wiki(pdf_path: str, title: str,
             )
 
             if insert_result.returncode == 0:
-                return doc_url
+                return f"https://my.feishu.cn/wiki/{node_token}"
             else:
                 print(f"插入 PDF 失败: {insert_result.stderr}")
-                # 即使插入失败，也返回文档 URL（文档已创建）
-                return doc_url
+                return f"https://my.feishu.cn/wiki/{node_token}"
 
         finally:
             if temp_path.exists():
                 temp_path.unlink()
+            os.chdir(orig_cwd)
 
     except Exception as e:
         print(f"上传 PDF 异常: {e}")
