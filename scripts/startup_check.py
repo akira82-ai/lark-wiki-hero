@@ -199,6 +199,40 @@ def init_config_from_url(space_url: str, default_parent_token: str = "") -> Dict
     return config
 
 
+def interactive_init_config() -> Dict[str, Any]:
+    """
+    交互式初始化配置（从命令行获取 URL）
+
+    Returns:
+        创建的配置字典
+    """
+    print("=" * 60)
+    print("Lark Wiki Hero - 配置初始化")
+    print("=" * 60)
+    print()
+    print("请提供您的飞书知识库 URL")
+    print()
+
+    # 提示用户输入 URL
+    space_url = input("知识库 URL (格式: https://my.feishu.cn/wiki/<token>): ").strip()
+
+    if not space_url:
+        print("❌ URL 不能为空")
+        sys.exit(1)
+
+    try:
+        config = init_config_from_url(space_url)
+        print()
+        print(f"✅ 配置已保存")
+        print(f"   Space ID: {config['space_id']}")
+        print(f"   配置文件: {CONFIG_PATH}")
+        print()
+        return config
+    except ValueError as e:
+        print(f"❌ 配置失败: {e}")
+        sys.exit(1)
+
+
 def get_space_id() -> str:
     """获取知识空间 ID"""
     config = load_config()
@@ -586,6 +620,8 @@ def main():
                        help="检查配置状态")
     parser.add_argument("--save-config", metavar="URL",
                        help="从 URL 保存配置")
+    parser.add_argument("--init", action="store_true",
+                       help="交互式初始化配置")
     parser.add_argument("--list-parents", action="store_true",
                        help="列出所有非叶子节点（可作为父节点）")
     parser.add_argument("--refresh-cache", action="store_true",
@@ -593,7 +629,10 @@ def main():
 
     args = parser.parse_args()
 
-    if args.save_config:
+    if args.init:
+        # 交互式初始化配置
+        interactive_init_config()
+    elif args.save_config:
         # 配置模式
         init_config_from_url(args.save_config)
         print(f"✓ 配置已保存到: {CONFIG_PATH}")

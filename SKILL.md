@@ -1,6 +1,6 @@
 ---
 name: lark-wiki-hero
-version: 2.3.0
+version: 2.3.1
 description: "飞书知识库智能管理工具。当用户提到飞书知识库、wiki 文档管理、上传文档到飞书、整理知识库结构、格式化 Markdown 文档，或任何与飞书/Lark 知识空间相关的操作时，必须使用此技能。支持智能自动分类上传、知识库结构分析与优化、文件规范化处理。即使使用'飞书文档'、'知识管理'等类似表达时，也应考虑使用此技能。"
 metadata:
   requires:
@@ -46,7 +46,7 @@ author: 磊叔 (AIRay1015)
 首先检查配置是否已存在：
 
 ```bash
-python3 {baseDir}/scripts/lark_api.py --check
+python3 {baseDir}/scripts/startup_check.py --check
 ```
 
 ### 步骤 2：如果配置缺失，获取用户知识库信息
@@ -64,13 +64,13 @@ python3 {baseDir}/scripts/lark_api.py --check
 获取到用户的 URL 后，运行以下命令初始化配置：
 
 ```bash
-python3 {baseDir}/scripts/lark_api.py --save-config "<用户提供的URL>"
+python3 {baseDir}/scripts/startup_check.py --save-config "<用户提供的URL>"
 ```
 
 **示例**：
 ```bash
 # 用户提供的 URL: https://my.feishu.cn/wiki/QWQHwA9uYibmtzkZLJBccaEhnNd
-python3 {baseDir}/scripts/lark_api.py --save-config "https://my.feishu.cn/wiki/QWQHwA9uYibmtzkZLJBccaEhnNd"
+python3 {baseDir}/scripts/startup_check.py --save-config "https://my.feishu.cn/wiki/QWQHwA9uYibmtzkZLJBccaEhnNd"
 ```
 
 ### 步骤 4：验证配置
@@ -78,7 +78,7 @@ python3 {baseDir}/scripts/lark_api.py --save-config "https://my.feishu.cn/wiki/Q
 配置保存后，再次检查确认：
 
 ```bash
-python3 {baseDir}/scripts/lark_api.py --check
+python3 {baseDir}/scripts/startup_check.py --check
 ```
 
 看到 `✓ 配置有效` 提示后，即可继续执行用户的请求。
@@ -128,16 +128,16 @@ lark-cli auth login --domain <your-domain>
 
 **检查配置状态**：
 ```bash
-python3 {baseDir}/scripts/lark_api.py --check
+python3 {baseDir}/scripts/startup_check.py --check
 ```
 
 **如果配置不存在，初始化配置**：
 ```bash
 # 方式 1：从 URL 直接初始化（推荐，适用于所有环境）
-python3 {baseDir}/scripts/lark_api.py --save-config "https://my.feishu.cn/wiki/<token>"
+python3 {baseDir}/scripts/startup_check.py --save-config "https://my.feishu.cn/wiki/<token>"
 
 # 方式 2：交互式初始化（仅适用于手动终端，不适用于 Claude Code）
-python3 {baseDir}/scripts/lark_api.py --init
+python3 {baseDir}/scripts/startup_check.py --init
 ```
 
 > **注意**：`--init` 使用交互式输入，只能在手动终端中使用。在 AI 编码工具（Claude Code / Codex / OpenClaw）中，请使用 `--save-config` 直接传入 URL。
@@ -452,7 +452,7 @@ lark-cli auth login --domain <your-domain>
 首先运行诊断命令检查环境状态：
 
 ```bash
-python3 {baseDir}/scripts/lark_api.py --check
+python3 {baseDir}/scripts/startup_check.py --check
 ```
 
 该命令会检查：
@@ -492,10 +492,10 @@ lark-cli auth status
 rm {baseDir}/config.json
 
 # 重新初始化配置（使用 --save-config 适用于所有环境）
-python3 ~/.claude/skills/lark-wiki-hero/scripts/lark_api.py --save-config "https://my.feishu.cn/wiki/<token>"
+python3 ~/.claude/skills/lark-wiki-hero/scripts/startup_check.py --save-config "https://my.feishu.cn/wiki/<token>"
 
 # 或者：在手动终端中使用交互式初始化
-# python3 ~/.claude/skills/lark-wiki-hero/scripts/lark_api.py --init
+# python3 ~/.claude/skills/lark-wiki-hero/scripts/startup_check.py --init
 ```
 
 #### 3. 权限不足
@@ -527,10 +527,10 @@ lark-cli api GET "/open-apis/wiki/v2/spaces"
 
 # 从输出中复制 space_id，手动更新配置文件
 # 或使用 --save-config 重新配置
-python3 {baseDir}/scripts/lark_api.py --save-config "https://my.feishu.cn/wiki/<space_id>"
+python3 {baseDir}/scripts/startup_check.py --save-config "https://my.feishu.cn/wiki/<space_id>"
 
 # 或者：在手动终端中使用交互式初始化
-# python3 {baseDir}/scripts/lark_api.py --init
+# python3 {baseDir}/scripts/startup_check.py --init
 ```
 
 #### 5. API 调用失败
