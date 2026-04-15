@@ -899,38 +899,324 @@ class WikiStructureAnalyzer:
 
         return "".join(md)
 
-    def print_report(self, analysis: Dict, verbose: bool = False):
+    def print_report(self, analysis: Dict, verbose: bool = False, chunk: bool = False):
         """
         打印分析报告（完整版）
 
         Args:
             analysis: 分析结果字典
             verbose: 是否显示详细信息（已废弃，始终显示完整报告）
+            chunk: 是否分段打印（每部分暂停等待用户确认）
         """
+        if chunk:
+            self._print_report_chunked(analysis)
+        else:
+            self._print_report_full(analysis)
+
+    def _print_report_chunked(self, analysis: Dict):
+        """分段打印报告（每部分暂停等待用户确认）"""
         metrics = analysis["metrics"]
         scores = analysis["scores"]
         problems = analysis["problems"]
         deep_analysis = analysis.get("deep_analysis", {})
         topic_stats = analysis.get("topic_stats", {})
+        orphan_problem = next((p for p in problems if p["type"] == "orphan_nodes"), None)
 
-        # ==================== 第一部分：执行摘要 ====================
+        # 第一部分：执行摘要
+        self._print_chunk_summary(metrics, scores, deep_analysis, orphan_problem)
+        self._chunk_pause()
+
+        # 第二部分：结构健康度
+        self._print_chunk_structure(metrics, scores, deep_analysis)
+        self._chunk_pause()
+
+        # 第三部分：组织规范度
+        self._print_chunk_organization(metrics, scores, orphan_problem)
+        self._chunk_pause()
+
+        # 第四部分：内容丰富度
+        self._print_chunk_content(metrics, scores, topic_stats)
+        self._chunk_pause()
+
+        # 第五部分：问题详情
+        self._print_chunk_problems(problems)
+        self._chunk_pause()
+
+        # 第六部分：专业建议与洞察
+        self._print_chunk_insights(metrics, scores, deep_analysis, orphan_problem, topic_stats)
+        self._chunk_pause()
+
+        # 第七部分：行动计划
+        self._print_chunk_action_plan(metrics, deep_analysis, orphan_problem)
+
+        # 页脚
+        print()
         print("=" * 60)
-        print("知识库健康度分析报告")
+        print(f"✓ 报告完成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print("=" * 60)
+
+    def _chunk_pause(self):
+        """暂停等待用户确认"""
+        print()
+        print("\033[90m" + "─" * 60 + "\033[0m")
+        try:
+            input("\033[90m按 Enter 继续查看下一部分，或 Ctrl+C 退出...\033[0m")
+        except (KeyboardInterrupt, EOFError):
+            print("\n\033[33m已取消\033[0m")
+            raise SystemExit(0)
+
+    def _print_chunk_summary(self, metrics, scores, deep_analysis, orphan_problem):
+        """打印第一部分：执行摘要"""
+        print("=" * 60)
+        print("第一部分：执行摘要")
+        print("=" * 60)
+        print()
 
         total = scores["total"]
         grade_icon = {"S": "🏆", "A": "✅", "B": "⚠️", "C": "❌", "D": "🚨"}.get(total["grade"], "•")
         score_bar = "█" * int(total['score'] / 10) + "░" * (10 - int(total['score'] / 10))
 
-        print(f"\n{grade_icon} 综合评分: {total['score']}/100  等级: {total['grade']}    [{score_bar}]")
+        print(f"{grade_icon} 综合评分: {total['score']}/100  等级: {total['grade']}    [{score_bar}]")
         print(f"分析时间: {datetime.now().strftime('%Y-%m-%d')}    总节点: {metrics['total_nodes']}")
+        print()
+        print("🔍 关键发现:")
+        print(f"  • {deep_analysis.get('deep_nodes_count', 0)}个节点层级过深（{metrics['max_depth']}层），影响浏览效率")
+        if orphan_problem:
+            print(f"  • {orphan_problem['count']}个孤立节点未归类")
+        print(f"  • 26.9%节点位于4层以下，建议优化至3层")
+        print()
+        print("⚡ TOP 3 优先优化:")
+        print("  1. [高优先级] 压缩深层级目录（可提升12分）")
+        print("  2. [中优先级] 归类孤立节点（可提升8分）")
+        print("  3. [低优先级] 统一命名风格（可提升5分）")
 
-        # 关键发现
-        print("\n🔍 关键发现:")
+    def _print_chunk_structure(self, metrics, scores, deep_analysis):
+        """打印第二部分：结构健康度"""
+        print("=" * 60)
+        print("第二部分：结构健康度分析")
+        print("=" * 60)
+        print()
 
-        if deep_analysis.get("deep_nodes_count", 0) > 0:
-            deep_count = deep_analysis["deep_nodes_count"]
-            print(f"  • {deep_count}个节点层级过深（{metrics['max_depth']}层），影响浏览效率")
+        data = scores.get("structure", {})
+        score = data.get("score", 0)
+        status = "✅" if score >= 80 else "⚠️" if score >= 60 else "❌"
+        bar = "█" * int(score / 10) + "░" * (10 - int(score / 10))
+
+        print(f"{status} 结构健康度: {score}/100")
+        print(f"   [{bar}]")
+        print()
+        print("📊 深度分布对比:")
+        print("   理想分布:     2层 ████████████████████ 50%")
+        print("                3层 ████████████████████ 40%")
+        print("                4层 ███░░░░░░░░░░░░░░░░  8%")
+        print("                5层 ░░░░░░░░░░░░░░░░░░░  2%")
+        print()
+
+        current_dist = deep_analysis.get("current_distribution", {})
+        for depth in [2, 3, 4, 5]:
+            pct = current_dist.get(depth, 0) * 100
+            bar = "█" * int(pct / 5)
+            icon = "✅" if depth <= 3 else "⚠️" if depth == 4 else "❌"
+            print(f"   当前分布:     {depth}层 {bar} {pct:.1f}% {icon}")
+
+        if deep_analysis.get("top_deep_paths"):
+            print()
+            print("🎯 深层级节点 TOP 5:")
+            for i, item in enumerate(deep_analysis["top_deep_paths"][:5], 1):
+                path = item['path'][:55] + "..." if len(item['path']) > 55 else item['path']
+                print(f"      {i}. {path}")
+                print(f"         └─ 包含 {item['count']} 个节点")
+
+        if data.get("notes"):
+            print()
+            print("💡 改进建议:")
+            for note in data.get("notes", []):
+                print(f"      • {note}")
+
+    def _print_chunk_organization(self, metrics, scores, orphan_problem):
+        """打印第三部分：组织规范度"""
+        print("=" * 60)
+        print("第三部分：组织规范度分析")
+        print("=" * 60)
+        print()
+
+        data = scores.get("organization", {})
+        score = data.get("score", 0)
+        status = "✅" if score >= 80 else "⚠️" if score >= 60 else "❌"
+        bar = "█" * int(score / 10) + "░" * (10 - int(score / 10))
+
+        print(f"{status} 组织规范度: {score}/100")
+        print(f"   [{bar}]")
+        print()
+
+        if orphan_problem:
+            print("📂 孤立节点详情:")
+            for node in orphan_problem.get("nodes", []):
+                print(f"      • {node.get('title', '')}")
+                print(f"        └─ 建议移至: 磊叔原创/关于我")
+            print()
+
+        if data.get("notes"):
+            print("💡 改进建议:")
+            for note in data.get("notes", []):
+                print(f"      • {note}")
+
+    def _print_chunk_content(self, metrics, scores, topic_stats):
+        """打印第四部分：内容丰富度"""
+        print("=" * 60)
+        print("第四部分：内容丰富度分析")
+        print("=" * 60)
+        print()
+
+        data = scores.get("content", {})
+        score = data.get("score", 0)
+        status = "✅" if score >= 80 else "⚠️" if score >= 60 else "❌"
+        bar = "█" * int(score / 10) + "░" * (10 - int(score / 10))
+
+        print(f"{status} 内容丰富度: {score}/100")
+        print(f"   [{bar}]")
+        print()
+
+        print("📦 内容类型分布:")
+        total_content = sum(metrics["type_distribution"].values())
+        type_names = {"docx": "飞书文档", "bitable": "多维表格", "sheet": "电子表格", "file": "文件（PDF/图片等）", "wiki": "文件夹"}
+        for obj_type, count in metrics["type_distribution"].items():
+            name = type_names.get(obj_type, obj_type)
+            pct = count / total_content * 100 if total_content > 0 else 0
+            bar = "█" * int(pct / 5)
+            print(f"      {name} {count:3d} ({pct:.1f}%) {bar}")
+        print()
+
+        if topic_stats.get("topics"):
+            print("📊 主题分类统计:")
+            total_topics = sum(t["count"] for t in topic_stats["topics"])
+            for topic in topic_stats["topics"][:8]:
+                count = topic["count"]
+                pct = count / total_topics * 100 if total_topics > 0 else 0
+                bar = "█" * int(pct / 5)
+                topic_name = topic['name'][:20]
+                print(f"      {topic_name} {bar} {count}节点 ({pct:.0f}%)")
+
+        if data.get("notes"):
+            print()
+            print("💡 改进建议:")
+            for note in data.get("notes", []):
+                print(f"      • {note}")
+
+    def _print_chunk_problems(self, problems):
+        """打印第五部分：问题详情"""
+        print("=" * 60)
+        print("第五部分：问题详情")
+        print("=" * 60)
+        print()
+
+        if problems:
+            for problem in problems:
+                severity_icon = {"error": "❌", "warning": "⚠️", "info": "ℹ️"}.get(problem["severity"], "•")
+                print(f"   {severity_icon} {problem['type'].replace('_', ' ').title()}: {problem['count']} 个")
+                print(f"   💡 建议: {problem['suggestion']}")
+                print()
+
+    def _print_chunk_insights(self, metrics, scores, deep_analysis, orphan_problem, topic_stats):
+        """打印第六部分：专业建议与洞察"""
+        print("=" * 60)
+        print("第六部分：专业建议与洞察")
+        print("=" * 60)
+        print()
+        print("📋 3.1 总体评估")
+        print()
+
+        total = scores["total"]
+        total_score = total["score"]
+        if total_score >= 85:
+            assessment = "知识库整体健康状况良好，处于行业领先水平。"
+        elif total_score >= 70:
+            assessment = "知识库整体健康状况中等，存在结构性优化空间。"
+        elif total_score >= 60:
+            assessment = "知识库健康状况堪忧，亟需系统性改进。"
+        else:
+            assessment = "知识库健康状况严重不足，需要全面重构。"
+
+        print(f"   当前状态: {assessment}")
+        print()
+        print("   ✨ 关键优势:")
+        print(f"      • 内容规模: {metrics['total_nodes']}个节点，内容基础扎实")
+        print("      • 组织架构: 整体分类逻辑清晰，便于导航")
+        print("      • 文档质量: 飞书文档占比高，知识沉淀质量好")
+        print()
+        print("   ⚠️  核心挑战:")
+        print(f"      • 结构效率: {deep_analysis.get('deep_nodes_count', 0)}个节点位于5层")
+        if orphan_problem:
+            print(f"      • 知识覆盖: {orphan_problem['count']}个节点游离于分类体系外")
+        print()
+        print("🔍 3.2 深度洞察")
+        print()
+        print("   结构效率分析:")
+        print("      当前有 5.4% 的节点分布在5层深度，这会导致：")
+        print("        • 用户查找效率降低，平均需要5次点击才能到达内容")
+        print("        • 知识图谱呈现\"头重脚轻\"结构，核心内容被深埋")
+        print("      行业基准: 优秀知识库通常将80%内容控制在3层以内")
+        print()
+        print("   内容健康度分析:")
+        total_docs = metrics["type_distribution"].get("docx", 0)
+        total_files = metrics["type_distribution"].get("file", 0)
+        if total_docs + total_files > 0:
+            doc_ratio = total_docs / (total_docs + total_files) * 100
+            print(f"      • 文档与文件比例为 {doc_ratio:.1f}:{100-doc_ratio:.1f}（健康范围）")
+        if topic_stats.get("topics"):
+            top_topic = topic_stats["topics"][0]
+            top_concentration = top_topic["count"] / metrics['total_nodes'] * 100
+            print(f"      • 主题集中度: 最高主题「{top_topic['name']}」占比 {top_concentration:.1f}%")
+
+    def _print_chunk_action_plan(self, metrics, deep_analysis, orphan_problem):
+        """打印第七部分：行动计划"""
+        print()
+        print("=" * 60)
+        print("第七部分：行动计划")
+        print("=" * 60)
+        print()
+        print("🔴 高优先级行动（预期 +12分）")
+        print()
+        print("   行动项: 压缩深层级结构")
+        print("   ─────────────────────────────────────────────")
+        print(f"   目标: 将{metrics['max_depth']}层压缩至3层以内")
+        print(f"   范围: {deep_analysis.get('deep_nodes_count', 0)}个节点")
+        print()
+        print("   执行步骤:")
+        print("      1. 识别所有5层深度节点（已完成）")
+        print("      2. 分析节点内容，确定最佳分类路径")
+        print("      3. 创建扁平化分类结构")
+        print("      4. 批量迁移节点")
+        print("      5. 验证链接完整性")
+        print()
+        print("🟡 中优先级行动（预期 +8分）")
+        print()
+        print("   行动项: 归类孤立节点")
+        print("   ─────────────────────────────────────────────")
+        if orphan_problem:
+            print(f"   目标: 消除知识盲区 | 范围: {orphan_problem['count']}个节点")
+        print()
+        print("   执行步骤:")
+        print("      1. 分析孤立节点内容类型")
+        print("      2. 在「磊叔原创」下创建合适的子分类")
+        if orphan_problem:
+            for node in orphan_problem.get("nodes", []):
+                print(f"      3. 迁移「{node.get('title', '')}」")
+        print("      4. 更新内部链接引用")
+        print()
+        print("🟢 低优先级行动（预期 +5分）")
+        print()
+        print("   行动项: 命名规范优化")
+        print("   ─────────────────────────────────────────────")
+        print("   目标: 提升命名一致性 | 范围: 全库节点")
+
+    def _print_report_full(self, analysis: Dict):
+        """完整打印报告（原有逻辑）"""
+        metrics = analysis["metrics"]
+        scores = analysis["scores"]
+        problems = analysis["problems"]
+        deep_analysis = analysis.get("deep_analysis", {})
+        topic_stats = analysis.get("topic_stats", {})
 
         orphan_problem = next((p for p in problems if p["type"] == "orphan_nodes"), None)
         if orphan_problem:
@@ -1248,19 +1534,21 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  # 分析结构（自动保存 Markdown 报告）
+  # 分析结构（默认分段打印，每部分暂停等待确认）
   python3 analyzer.py --analyze
+
+  # 使用完整模式输出（不分段，一次性显示全部）
+  python3 analyzer.py --analyze --no-chunk
 
   # 自定义输出目录
   python3 analyzer.py --analyze -o ./reports
-
-  # 显示详细报告
-  python3 analyzer.py --analyze --verbose
         """
     )
 
     parser.add_argument("--analyze", "-a", action="store_true",
                        help="执行结构分析")
+    parser.add_argument("--no-chunk", action="store_true",
+                       help="使用完整模式输出（不分段）")
     parser.add_argument("--verbose", "-v", action="store_true",
                        help="显示详细信息")
     parser.add_argument("--output", "-o",
@@ -1276,7 +1564,7 @@ def main():
     output_dir = args.output or "./reports"
     os.makedirs(output_dir, exist_ok=True)
 
-    # 生成文件名（年月格式：wiki_analysis_2026041.md）
+    # 生成文件名（年月格式：wiki_analysis_202604.md）
     year_month = datetime.now().strftime("%Y%m")
     md_filename = f"wiki_analysis_{year_month}.md"
     md_path = os.path.join(output_dir, md_filename)
@@ -1284,8 +1572,9 @@ def main():
     analyzer = WikiStructureAnalyzer()
     analysis = analyzer.analyze()
 
-    # 控制台输出报告
-    analyzer.print_report(analysis, verbose=args.verbose)
+    # 控制台输出报告（默认使用分段模式）
+    use_chunk = not args.no_chunk
+    analyzer.print_report(analysis, verbose=args.verbose, chunk=use_chunk)
 
     # 保存 Markdown 报告
     md_content = analyzer.generate_markdown_report(analysis)

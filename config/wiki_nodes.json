@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "space_id": "7472294423981064194",
-  "last_update": 1776143517,
+  "last_update": 1776245959,
   "nodes": [
     {
       "title": "磊叔原创",
@@ -406,42 +406,6 @@
       "level": 0,
       "obj_type": "docx",
       "obj_edit_time": "1774915122",
-      "has_child": true
-    },
-    {
-      "title": "其他",
-      "token": "Iv8zw8ItIiHXTGkVQRmcvznJnJe",
-      "path": "待删除/其他",
-      "level": 1,
-      "obj_type": "docx",
-      "obj_edit_time": "1774760049",
-      "has_child": true
-    },
-    {
-      "title": "Claude Code",
-      "token": "EaLrwhjmHipui3kegnQc4lKrn4e",
-      "path": "待删除/Claude Code",
-      "level": 1,
-      "obj_type": "bitable",
-      "obj_edit_time": "1775101372",
-      "has_child": true
-    },
-    {
-      "title": "Vibe Coding",
-      "token": "NtrVwbfWTidq0BkUS1ZcWH6Nnwn",
-      "path": "待删除/Vibe Coding",
-      "level": 1,
-      "obj_type": "bitable",
-      "obj_edit_time": "1775099875",
-      "has_child": true
-    },
-    {
-      "title": "DeepSeek专题",
-      "token": "UuGAwOe1Riucipkmz2HcIgFZnbd",
-      "path": "待删除/DeepSeek专题",
-      "level": 1,
-      "obj_type": "docx",
-      "obj_edit_time": "1740125067",
       "has_child": true
     },
     {
