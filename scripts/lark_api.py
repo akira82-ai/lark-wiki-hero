@@ -13,180 +13,16 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 
-# 配置文件路径
-CONFIG_PATH = Path(__file__).parent.parent / "config.json"
+# ================================
+# 配置路径
+# ================================
+
+CONFIG_PATH = Path(__file__).parent.parent / "config" / "config.json"
 
 
-def check_lark_cli_installed() -> bool:
-    """
-    检查 lark-cli 是否已安装
-
-    Returns:
-        是否已安装
-    """
-    try:
-        result = subprocess.run(
-            ["lark-cli", "--version"],
-            capture_output=True,
-            text=True
-        )
-        return result.returncode == 0
-    except FileNotFoundError:
-        return False
-
-
-def extract_space_id_from_url(space_url: str) -> Optional[str]:
-    """
-    从知识库 URL 中提取 space_id 或 node_token
-
-    Args:
-        space_url: 知识库 URL
-
-    Returns:
-        space_id 或 node_token，失败返回 None
-    """
-    # 去除 URL 中的查询参数（? 及其后面的内容）
-    clean_url = space_url.split('?')[0]
-
-    # 从 URL 中提取 token
-    # URL 格式:
-    #   - https://my.feishu.cn/wiki/space/{space_id}
-    #   - https://my.feishu.cn/wiki/{token}
-    import re
-
-    # 优先匹配 /wiki/space/{数字ID} 格式
-    match = re.search(r'/wiki/space/(\d+)', clean_url)
-    if match:
-        return match.group(1)
-
-    # 回退到 /wiki/{token} 格式
-    match = re.search(r'/wiki/([a-zA-Z0-9]+)', clean_url)
-    if match:
-        return match.group(1)
-
-    return None
-
-
-def get_space_id_from_api() -> Optional[str]:
-    """
-    通过 API 获取用户的知识空间列表
-
-    Returns:
-        第一个可用的 space_id，失败返回 None
-    """
-    result = lark_api("GET", "/open-apis/wiki/v2/spaces")
-    if result and "data" in result:
-        spaces = result["data"].get("items", [])
-        if spaces:
-            return spaces[0].get("space_id")
-    return None
-
-
-def init_config_from_url(space_url: str, default_parent_token: str = "") -> Dict[str, Any]:
-    """
-    从知识库 URL 初始化配置
-
-    Args:
-        space_url: 知识库 URL
-        default_parent_token: 默认父节点 token
-
-    Returns:
-        创建的配置字典
-    """
-    # 去除 URL 中的查询参数（? 及其后面的内容）
-    clean_url = space_url.split('?')[0]
-
-    # 提取 space_id
-    space_id = extract_space_id_from_url(clean_url)
-
-    # 如果 URL 中没有提取到，尝试通过 API 获取
-    if not space_id:
-        print(f"⚠️ 无法从 URL 提取 space_id，尝试通过 API 获取...")
-        space_id = get_space_id_from_api()
-        if not space_id:
-            raise ValueError("无法获取 space_id，请检查 URL 或确保已登录 lark-cli")
-
-    config = {
-        "space_id": space_id,
-        "space_url": clean_url,
-        "default_parent_token": default_parent_token
-    }
-
-    save_config(config)
-    return config
-
-
-def init_config_interactive() -> Dict[str, Any]:
-    """
-    交互式初始化配置
-
-    Returns:
-        创建的配置字典
-    """
-    print("=" * 60)
-    print("Lark Wiki Hero - 首次配置")
-    print("=" * 60)
-    print()
-    print("请提供您的飞书知识库信息以完成配置。")
-    print()
-
-    # 检查 lark-cli 是否安装
-    if not check_lark_cli_installed():
-        print("❌ 错误: 未检测到 lark-cli")
-        print()
-        print("请先安装 lark-cli:")
-        print("  npm install -g @larksuite/cli")
-        print()
-        print("安装完成后，请登录:")
-        print("  lark-cli auth login --domain <your-domain>")
-        print()
-        sys.exit(1)
-
-    # 询问知识库 URL
-    print("请输入您的飞书知识库 URL:")
-    print("  格式: https://my.feishu.cn/wiki/<token>")
-    print("  或者直接按回车使用默认知识空间")
-    print()
-
-    space_url = input("知识库 URL (留空使用默认): ").strip()
-
-    if not space_url:
-        # 尝试获取默认空间
-        print("正在获取默认知识空间...")
-        space_id = get_space_id_from_api()
-        if not space_id:
-            print("❌ 无法获取默认知识空间，请提供 URL")
-            sys.exit(1)
-        space_url = f"https://my.feishu.cn/wiki/{space_id}"
-        print(f"✓ 使用默认空间: {space_url}")
-
-    # 询问默认父节点
-    print()
-    default_parent = input("默认父节点 token (留空表示根目录): ").strip()
-
-    # 创建配置
-    config = init_config_from_url(space_url, default_parent)
-
-    print()
-    print("✓ 配置已保存!")
-    print(f"  Space ID: {config['space_id']}")
-    print(f"  配置文件: {CONFIG_PATH}")
-    print()
-
-    return config
-
-
-def ensure_config_exists() -> Dict[str, Any]:
-    """
-    确保配置存在，如果不存在则初始化
-
-    Returns:
-        配置字典
-    """
-    if not CONFIG_PATH.exists():
-        return init_config_interactive()
-    return load_config()
-
+# ================================
+# 配置管理
+# ================================
 
 def load_config() -> Dict[str, Any]:
     """
@@ -204,9 +40,7 @@ def load_config() -> Dict[str, Any]:
             f"配置文件不存在: {CONFIG_PATH}\n"
             f"\n"
             f"请先初始化配置:\n"
-            f"  python3 {Path(__file__).parent}/lark_api.py --init\n"
-            f"\n"
-            f"或在 AI 编码工具中运行此技能时，会自动引导您完成配置。"
+            f"  python3 {Path(__file__).parent}/startup_check.py --save-config \"<您的URL>\""
         )
 
     try:
@@ -219,11 +53,45 @@ def load_config() -> Dict[str, Any]:
         )
 
 
-def save_config(config: Dict[str, Any]) -> None:
-    """保存配置文件"""
-    with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
-        json.dump(config, f, ensure_ascii=False, indent=2)
+def get_space_id() -> str:
+    """获取知识空间 ID"""
+    config = load_config()
+    return config.get("space_id", "")
 
+
+def require_config() -> Dict[str, Any]:
+    """
+    要求配置存在，用于脚本入口
+
+    Returns:
+        配置字典
+
+    Raises:
+        SystemExit: 配置不存在时退出
+    """
+    if not CONFIG_PATH.exists():
+        print("=" * 60)
+        print("Lark Wiki Hero - 首次配置")
+        print("=" * 60)
+        print()
+        print("⚠️ 检测到首次使用，需要配置您的飞书知识库信息")
+        print()
+        print("请提供您的知识库 URL，格式如下：")
+        print("  https://my.feishu.cn/wiki/<token>")
+        print()
+        print("配置初始化命令：")
+        print(f"  python3 {Path(__file__).parent}/startup_check.py --save-config \"<您的URL>\"")
+        print()
+        print("配置完成后，请重新执行您的操作。")
+        print("=" * 60)
+        sys.exit(1)
+
+    return load_config()
+
+
+# ================================
+# Lark API 调用
+# ================================
 
 def lark_api(method: str, path: str,
              data: Optional[Dict[str, Any]] = None,
@@ -267,11 +135,9 @@ def lark_api(method: str, path: str,
         return None
 
 
-def get_space_id() -> str:
-    """获取知识空间 ID"""
-    config = load_config()
-    return config.get("space_id", "")
-
+# ================================
+# 节点操作
+# ================================
 
 def list_nodes(parent_node_token: str = "", page_size: int = 50) -> Optional[Dict]:
     """
@@ -317,7 +183,7 @@ def create_node(parent_node_token: str, obj_type: str, title: str) -> Optional[D
 
     Args:
         parent_node_token: 父节点 token
-        obj_type: 节点类型 (wiki, sheet, bitable, etc.)
+        obj_type: 节点类型 (docx, sheet, bitable, slides 等)
         title: 节点标题
 
     Returns:
@@ -329,53 +195,11 @@ def create_node(parent_node_token: str, obj_type: str, title: str) -> Optional[D
     data = {
         "parent_node_token": parent_node_token,
         "obj_type": obj_type,
+        "node_type": "origin",  # 必需参数
         "title": title
     }
 
     return lark_api("POST", path, data=data)
-
-
-def create_document(title: str, parent_node_token: str = "",
-                   markdown: str = "") -> Optional[str]:
-    """
-    创建文档（使用 lark-cli docs +create）
-
-    Args:
-        title: 文档标题
-        parent_node_token: 父节点 token（知识库位置）
-        markdown: Markdown 内容
-
-    Returns:
-        创建的文档 URL 或 token
-    """
-    cmd = [
-        "lark-cli", "docs", "+create",
-        "--title", title,
-        "--wiki-node", parent_node_token
-    ]
-
-    if markdown:
-        cmd.extend(["--markdown", markdown])
-
-    try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            encoding='utf-8'
-        )
-
-        if result.returncode == 0:
-            # 返回结果中包含文档 URL
-            output = result.stdout.strip()
-            return output
-        else:
-            print(f"创建文档失败: {result.stderr}")
-            return None
-
-    except Exception as e:
-        print(f"创建文档异常: {e}")
-        return None
 
 
 def update_node_title(node_token: str, new_title: str) -> bool:
@@ -388,12 +212,28 @@ def update_node_title(node_token: str, new_title: str) -> bool:
 
     Returns:
         是否成功
+
+    注意:
+        需要先获取节点信息以确定 node_type
     """
     space_id = get_space_id()
-    path = f"/open-apis/wiki/v2/spaces/{space_id}/nodes/{node_token}/title"
 
-    data = {"title": new_title}
-    result = lark_api("POST", path, data=data)
+    # 先获取节点信息
+    node_info = get_node(node_token)
+    if not node_info:
+        return False
+
+    node_type = node_info["data"]["node"].get("node_type", "origin")
+
+    # 使用 PATCH 方法更新节点
+    path = f"/open-apis/wiki/v2/spaces/{space_id}/nodes/{node_token}"
+
+    data = {
+        "node_type": node_type,
+        "title": new_title
+    }
+
+    result = lark_api("PATCH", path, data=data)
 
     return result is not None
 
@@ -420,25 +260,239 @@ def move_node(node_token: str, target_parent_token: str) -> bool:
 
 def delete_node(node_token: str) -> bool:
     """
-    删除节点
+    删除节点（通过移动到"待删除"文件夹）
+
+    飞书 Wiki 不支持直接删除节点，此函数将节点移动到名为"待删除"的文件夹。
 
     Args:
-        node_token: 节点 token
+        node_token: 要删除的节点 token
 
     Returns:
         是否成功
+
+    注意:
+        - 会自动在根目录创建"待删除"文件夹（如果不存在）
+        - 节点会被移动到"待删除"文件夹下
     """
     space_id = get_space_id()
-    path = f"/open-apis/wiki/v2/spaces/{space_id}/nodes/{node_token}"
+    trash_title = "待删除"
 
-    result = lark_api("DELETE", path)
+    # 1. 查找"待删除"文件夹
+    result = list_nodes(parent_node_token="", page_size=50)
+
+    trash_folder_token = None
+    if result and "data" in result:
+        items = result["data"].get("items", [])
+        # 查找名为"待删除"的文件夹
+        for item in items:
+            if (item.get("title") == trash_title and
+                item.get("obj_type") == "docx"):  # 文件夹也是 docx 类型
+                trash_folder_token = item.get("node_token")
+                break
+
+    # 2. 如果没找到，创建"待删除"文件夹
+    if not trash_folder_token:
+        print("正在创建'待删除'文件夹...")
+        create_result = create_node(
+            parent_node_token="",
+            obj_type="docx",  # 文件夹使用 docx 类型
+            title=trash_title
+        )
+        if create_result and "data" in create_result:
+            trash_folder_token = create_result["data"]["node"]["node_token"]
+        else:
+            print("无法创建'待删除'文件夹")
+            return False
+
+    # 3. 移动节点到"待删除"文件夹
+    path = f"/open-apis/wiki/v2/spaces/{space_id}/nodes/{node_token}/move"
+    data = {"target_parent_token": trash_folder_token}
+
+    result = lark_api("POST", path, data=data)
 
     return result is not None
 
 
+# ================================
+# 文档操作
+# ================================
+
+def create_document(title: str, parent_node_token: str = "",
+                   markdown: str = "") -> Optional[str]:
+    """
+    创建文档（使用原生 API）
+
+    Args:
+        title: 文档标题
+        parent_node_token: 父节点 token（知识库位置）
+        markdown: Markdown 内容
+
+    Returns:
+        创建的文档 URL 或 node_token
+    """
+    space_id = get_space_id()
+    path = f"/open-apis/wiki/v2/spaces/{space_id}/nodes"
+
+    # 使用 API 创建节点
+    data = {
+        "obj_type": "docx",
+        "parent_node_token": parent_node_token,
+        "node_type": "origin",
+        "title": title
+    }
+
+    result = lark_api("POST", path, data=data)
+
+    if not result or "data" not in result:
+        print(f"创建文档失败: 无效响应")
+        return None
+
+    node_token = result["data"].get("node", {}).get("node_token")
+    if not node_token:
+        print(f"创建文档失败: 未返回 node_token")
+        return None
+
+    # 如果有 Markdown 内容，需要通过文档 API 写入内容
+    # 注意：这需要额外的文档 API 调用
+    if markdown:
+        # TODO: 调用文档内容更新 API
+        # 目前先返回 node_token，内容更新需要单独实现
+        pass
+
+    # 返回知识库节点 URL
+    return f"https://my.feishu.cn/wiki/{space_id}?node={node_token}"
+
+
+def upload_pdf_to_wiki(pdf_path: str, title: str,
+                       parent_node_token: str = "") -> Optional[str]:
+    """
+    上传 PDF 到知识库：创建文档并插入 PDF 文件
+
+    Args:
+        pdf_path: PDF 文件路径
+        title: 文档标题
+        parent_node_token: 父节点 token
+
+    Returns:
+        创建的文档 URL，失败返回 None
+
+    注意：
+        - 创建文档节点后，需要通过文档块 API 插入文件
+        - 文件上传需要调用文档媒体 API
+    """
+    import shutil
+    import os
+
+    try:
+        # 1. 创建文档节点
+        space_id = get_space_id()
+        path = f"/open-apis/wiki/v2/spaces/{space_id}/nodes"
+
+        data = {
+            "obj_type": "docx",
+            "parent_node_token": parent_node_token,
+            "node_type": "origin",
+            "title": title
+        }
+
+        result = lark_api("POST", path, data=data)
+
+        if not result or "data" not in result:
+            return None
+
+        node_token = result["data"].get("node", {}).get("node_token")
+        obj_token = result["data"].get("node", {}).get("obj_token")
+
+        if not node_token or not obj_token:
+            return None
+
+        doc_url = f"https://my.feishu.cn/wiki/{space_id}?node={node_token}"
+
+        # 2. 上传 PDF 文件到文档
+        # 使用 lark-cli 的文件上传功能（这个暂时保留，因为文件上传 API 较复杂）
+        # TODO: 改为纯 API 调用，需要调用：
+        # - POST /open-apis/docx/v1/documents/{document_id}/blocks/{block_id}/files
+        # - 需要先获取文档块结构
+
+        # 临时方案：使用 lark-cli 的媒体插入功能
+        temp_path = Path.cwd() / f"__temp_upload__{Path(pdf_path).name}"
+
+        try:
+            shutil.copy2(pdf_path, temp_path)
+
+            cmd = [
+                "lark-cli", "docs", "+media-insert",
+                "--doc", doc_url,
+                "--file", f"./{temp_path.name}",
+                "--type", "file"
+            ]
+
+            insert_result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                encoding='utf-8'
+            )
+
+            if insert_result.returncode == 0:
+                return doc_url
+            else:
+                print(f"插入 PDF 失败: {insert_result.stderr}")
+                # 即使插入失败，也返回文档 URL（文档已创建）
+                return doc_url
+
+        finally:
+            if temp_path.exists():
+                temp_path.unlink()
+
+    except Exception as e:
+        print(f"上传 PDF 异常: {e}")
+        return None
+
+
+def get_document_content(doc_url_or_token: str) -> Optional[str]:
+    """
+    获取文档内容（使用原生 API）
+
+    Args:
+        doc_url_or_token: 文档 URL 或 node_token
+
+    Returns:
+        Markdown 内容
+
+    注意：
+        需要调用文档块 API 获取完整内容
+        API: GET /open-apis/docx/v1/documents/{document_id}/blocks/{block_id}
+    """
+    # TODO: 实现纯 API 调用
+    # 临时方案：使用 lark-cli
+    cmd = [
+        "lark-cli", "docs", "+fetch",
+        "--doc", doc_url_or_token
+    ]
+
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            encoding='utf-8'
+        )
+
+        if result.returncode == 0:
+            return result.stdout
+        else:
+            print(f"获取文档内容失败: {result.stderr}")
+            return None
+
+    except Exception as e:
+        print(f"获取文档内容异常: {e}")
+        return None
+
+
 def search_documents(query: str, page_size: int = 10) -> Optional[Dict]:
     """
-    搜索文档
+    搜索文档（使用原生 API）
 
     Args:
         query: 搜索关键词
@@ -446,7 +500,13 @@ def search_documents(query: str, page_size: int = 10) -> Optional[Dict]:
 
     Returns:
         搜索结果
+
+    注意：
+        API: POST /open-apis/search/v2/message
+        需要指定搜索类型为文档
     """
+    # TODO: 实现纯 API 调用
+    # 临时方案：使用 lark-cli
     cmd = [
         "lark-cli", "docs", "+search",
         "--query", query,
@@ -472,39 +532,9 @@ def search_documents(query: str, page_size: int = 10) -> Optional[Dict]:
         return None
 
 
-def get_document_content(doc_url_or_token: str) -> Optional[str]:
-    """
-    获取文档内容
-
-    Args:
-        doc_url_or_token: 文档 URL 或 token
-
-    Returns:
-        Markdown 内容
-    """
-    cmd = [
-        "lark-cli", "docs", "+fetch",
-        "--doc", doc_url_or_token
-    ]
-
-    try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            encoding='utf-8'
-        )
-
-        if result.returncode == 0:
-            return result.stdout
-        else:
-            print(f"获取文档内容失败: {result.stderr}")
-            return None
-
-    except Exception as e:
-        print(f"获取文档内容异常: {e}")
-        return None
-
+# ================================
+# 节点树操作
+# ================================
 
 def build_node_tree(parent_token: str = "", max_depth: int = 10,
                    current_depth: int = 0) -> List[Dict]:
@@ -583,114 +613,3 @@ def flatten_node_tree(tree: List[Dict], parent_path: str = "") -> Dict[str, Dict
             flat.update(flatten_node_tree(node["children"], current_path))
 
     return flat
-
-
-def check_and_prompt_config() -> bool:
-    """
-    检查配置状态并提示用户
-
-    Returns:
-        配置是否有效
-    """
-    # 检查 lark-cli
-    if not check_lark_cli_installed():
-        print("⚠️ 未检测到 lark-cli")
-        print()
-        print("请先安装 lark-cli:")
-        print("  npm install -g @larksuite/cli")
-        print()
-        print("安装完成后，请登录:")
-        print("  lark-cli auth login --domain <your-domain>")
-        print()
-        return False
-
-    # 检查配置文件
-    if not CONFIG_PATH.exists():
-        print("⚠️ 配置文件不存在，需要初始化配置")
-        print()
-        print("在 AI 编码工具中使用时，请提供您的飞书知识库 URL。")
-        print()
-        print("知识库 URL 格式: https://my.feishu.cn/wiki/<token>")
-        print()
-        print("配置初始化命令:")
-        print(f"  python3 {Path(__file__).parent}/lark_api.py --save-config \"<您的URL>\"")
-        print()
-        return False
-
-    # 验证配置
-    try:
-        config = load_config()
-        if not config.get("space_id"):
-            print("⚠️ 配置文件无效: 缺少 space_id")
-            print(f"请删除 {CONFIG_PATH} 后重新配置")
-            return False
-
-        print(f"✓ 配置有效 (Space ID: {config['space_id']})")
-        return True
-
-    except Exception as e:
-        print(f"⚠️ 配置文件错误: {e}")
-        print(f"请删除 {CONFIG_PATH} 后重新配置")
-        return False
-
-
-def require_config() -> Dict[str, Any]:
-    """
-    要求配置存在，用于脚本入口
-
-    Returns:
-        配置字典
-
-    Raises:
-        SystemExit: 配置不存在时退出
-    """
-    if not CONFIG_PATH.exists():
-        print("=" * 60)
-        print("Lark Wiki Hero - 首次配置")
-        print("=" * 60)
-        print()
-        print("⚠️ 检测到首次使用，需要配置您的飞书知识库信息")
-        print()
-        print("请提供您的知识库 URL，格式如下：")
-        print("  https://my.feishu.cn/wiki/<token>")
-        print()
-        print("配置初始化命令：")
-        print(f"  python3 {Path(__file__).parent}/lark_api.py --save-config \"<您的URL>\"")
-        print()
-        print("配置完成后，请重新执行您的操作。")
-        print("=" * 60)
-        sys.exit(1)
-
-    return load_config()
-
-
-def main():
-    """命令行入口"""
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        description="Lark Wiki Hero - 配置管理工具"
-    )
-
-    parser.add_argument("--init", action="store_true",
-                       help="交互式初始化配置")
-    parser.add_argument("--check", action="store_true",
-                       help="检查配置状态")
-    parser.add_argument("--save-config", metavar="URL",
-                       help="从 URL 保存配置")
-
-    args = parser.parse_args()
-
-    if args.init:
-        init_config_interactive()
-    elif args.check:
-        check_and_prompt_config()
-    elif args.save_config:
-        init_config_from_url(args.save_config)
-        print(f"✓ 配置已保存到: {CONFIG_PATH}")
-    else:
-        parser.print_help()
-
-
-if __name__ == "__main__":
-    main()

@@ -1,0 +1,457 @@
+{
+  "version": "1.0",
+  "space_id": "7472294423981064194",
+  "last_update": 1776143517,
+  "nodes": [
+    {
+      "title": "磊叔原创",
+      "token": "LRMHwS2kFiHAHzkGn9ccSUz4nRh",
+      "path": "磊叔原创",
+      "level": 0,
+      "obj_type": "docx",
+      "obj_edit_time": "1775098143",
+      "has_child": true
+    },
+    {
+      "title": "深度教程",
+      "token": "Ioy6w0cu7ishXgkVYB0c8rRinyh",
+      "path": "磊叔原创/深度教程",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1775897705",
+      "has_child": true
+    },
+    {
+      "title": "Agent Skill 开发蓝皮书：产品化·调用体系·Agent 编排",
+      "token": "AkzJwaCTliwlCskKNcPcUiDPnqg",
+      "path": "磊叔原创/深度教程/Agent Skill 开发蓝皮书：产品化·调用体系·Agent 编排",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1775102545",
+      "has_child": true
+    },
+    {
+      "title": "airay-skills 使用指南",
+      "token": "RwhXwdearifWO7kP967cGA0UnMg",
+      "path": "磊叔原创/深度教程/airay-skills 使用指南",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1775013408",
+      "has_child": true
+    },
+    {
+      "title": "原创作品",
+      "token": "DLMHwjSltiErV4kyCgFcJor5n3d",
+      "path": "磊叔原创/原创作品",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1775097970",
+      "has_child": true
+    },
+    {
+      "title": "我的 nano banana 作品",
+      "token": "Igbfwp3Q6iJMlck7CGfcr9c5nif",
+      "path": "磊叔原创/原创作品/我的 nano banana 作品",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1767660186",
+      "has_child": true
+    },
+    {
+      "title": "@晓辉博士",
+      "token": "Vu1mwXDXji0rAbknCiLcCOjKnLb",
+      "path": "磊叔原创/@晓辉博士",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1767495692",
+      "has_child": true
+    },
+    {
+      "title": "个人IP成长计划",
+      "token": "RgsPwk2uOiuuQZkv99CcrsSSnCf",
+      "path": "磊叔原创/个人IP成长计划",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1768639856",
+      "has_child": true
+    },
+    {
+      "title": "短视频文案",
+      "token": "V7uywSKPvioDTrkuRNrc7UZPnpf",
+      "path": "磊叔原创/个人IP成长计划/短视频文案",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1773999750",
+      "has_child": true
+    },
+    {
+      "title": "文章草稿",
+      "token": "UcRswatLeiuO2KkkHIccl3EYnBc",
+      "path": "磊叔原创/个人IP成长计划/文章草稿",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1775629440",
+      "has_child": true
+    },
+    {
+      "title": "每日复盘",
+      "token": "V709wLWjziW3gUkDH6ncHQiFno9",
+      "path": "磊叔原创/每日复盘",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1775533911",
+      "has_child": true
+    },
+    {
+      "title": "我要学",
+      "token": "OW8NwuLTOiRp7BkwckicSYUDnle",
+      "path": "我要学",
+      "level": 0,
+      "obj_type": "docx",
+      "obj_edit_time": "1775097936",
+      "has_child": true
+    },
+    {
+      "title": "Claude Code & Vibe Coding",
+      "token": "DQ7bwgRvciloUbkgPzUcoPi2nDg",
+      "path": "我要学/Claude Code & Vibe Coding",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1775097960",
+      "has_child": true
+    },
+    {
+      "title": "Agent 开发",
+      "token": "MGzawYuq5i8UkBkbi5xc8J3Rnyd",
+      "path": "我要学/Agent 开发",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1775097962",
+      "has_child": true
+    },
+    {
+      "title": "coze/扣子",
+      "token": "DTumwRHKeilTUFkmbizc3qvfnRf",
+      "path": "我要学/Agent 开发/coze/扣子",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1741438685",
+      "has_child": true
+    },
+    {
+      "title": "Manus",
+      "token": "XunQwy4lPioFRvktL9HcklR0n5f",
+      "path": "我要学/Agent 开发/Manus",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1741435016",
+      "has_child": true
+    },
+    {
+      "title": "用智能体做的分析报告（持续更新）",
+      "token": "XJ6AwHP83iovTNkBQUYcTigSnYe",
+      "path": "我要学/Agent 开发/用智能体做的分析报告（持续更新）",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1747304084",
+      "has_child": true
+    },
+    {
+      "title": "上下文工程",
+      "token": "KWeuwmpNniIouDkGM8NcbaCwnbd",
+      "path": "我要学/上下文工程",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1775097964",
+      "has_child": true
+    },
+    {
+      "title": "上下文工程（中文版）",
+      "token": "BUoRwOCyKibpzNkSvoOcr8hLnhb",
+      "path": "我要学/上下文工程/上下文工程（中文版）",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1758094499",
+      "has_child": true
+    },
+    {
+      "title": "我要用",
+      "token": "VamIwcJiMi1HNckKnF5cXA6an1b",
+      "path": "我要用",
+      "level": 0,
+      "obj_type": "docx",
+      "obj_edit_time": "1775097938",
+      "has_child": true
+    },
+    {
+      "title": "提示词模板库",
+      "token": "HEolwL2SZiERBbkKFs5cqAfhn9g",
+      "path": "我要用/提示词模板库",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1775097965",
+      "has_child": true
+    },
+    {
+      "title": "X/推特系列",
+      "token": "GVpJw43qDis5AnkhGitcaPMgnkc",
+      "path": "我要用/提示词模板库/X/推特系列",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1775097986",
+      "has_child": true
+    },
+    {
+      "title": "内容理解/处理提示词",
+      "token": "Cx5XwdKlQiIwrJkWgqAcxjTIn2X",
+      "path": "我要用/提示词模板库/内容理解/处理提示词",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1745459899",
+      "has_child": true
+    },
+    {
+      "title": "图像理解/处理提示词",
+      "token": "Y0k0wJ13hi0emAkmyCocSjD5nnf",
+      "path": "我要用/提示词模板库/图像理解/处理提示词",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1745466788",
+      "has_child": true
+    },
+    {
+      "title": "高级提示词",
+      "token": "BpxkwRFt2iQFC2kD4NzcnnZonQf",
+      "path": "我要用/提示词模板库/高级提示词",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1745459822",
+      "has_child": true
+    },
+    {
+      "title": "各官方提示词",
+      "token": "WaQWwEXidiY55bkNyl2crfeJnIe",
+      "path": "我要用/提示词模板库/各官方提示词",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1745459699",
+      "has_child": true
+    },
+    {
+      "title": "NanoBananaPro提示词",
+      "token": "WwjcwYWt8ioPdTkNXKecUe92nUc",
+      "path": "我要用/提示词模板库/NanoBananaPro提示词",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1766889160",
+      "has_child": true
+    },
+    {
+      "title": "工具箱",
+      "token": "Nfvdw3aWri8v1lkAbuicI5KnnAh",
+      "path": "我要用/工具箱",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1775100465",
+      "has_child": true
+    },
+    {
+      "title": "我要找",
+      "token": "CjRhwVkMIiNyi9k3q7vcs0WwnCc",
+      "path": "我要找",
+      "level": 0,
+      "obj_type": "docx",
+      "obj_edit_time": "1775098153",
+      "has_child": true
+    },
+    {
+      "title": "AI Agent 研究",
+      "token": "VW62wZM6giBkwokZgFEcYRPMnXe",
+      "path": "我要找/AI Agent 研究",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1775098155",
+      "has_child": true
+    },
+    {
+      "title": "大模型 / LLM（含 DeepSeek）",
+      "token": "ILiLwv2d7i08y2k4rioc1mPInqg",
+      "path": "我要找/大模型 / LLM（含 DeepSeek）",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1775098167",
+      "has_child": true
+    },
+    {
+      "title": "Prompt / 上下文研究",
+      "token": "IfV0wrxtIiBI2SkVQwPcxIgLnYd",
+      "path": "我要找/Prompt / 上下文研究",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1775098156",
+      "has_child": true
+    },
+    {
+      "title": "其他报告",
+      "token": "CormwGE2XiFxQ6kKLe8cjfltnuh",
+      "path": "我要找/其他报告",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1775100039",
+      "has_child": true
+    },
+    {
+      "title": "峰会资料",
+      "token": "FutqwjtgMiNx9SktMgZcAnr1njg",
+      "path": "我要找/峰会资料",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1775098168",
+      "has_child": true
+    },
+    {
+      "title": "2025 年 AICon 全球人工智能开发与应用大会（北京站）",
+      "token": "ZtZwwKKVyiEX71kpAaqcGEL1nJf",
+      "path": "我要找/峰会资料/2025 年 AICon 全球人工智能开发与应用大会（北京站）",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1752035594",
+      "has_child": true
+    },
+    {
+      "title": "2025年 WAIC 世界人工智能峰会（上海）",
+      "token": "QmEOw8bnbiFZaukJf58csu7PnCh",
+      "path": "我要找/峰会资料/2025年 WAIC 世界人工智能峰会（上海）",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1753869584",
+      "has_child": true
+    },
+    {
+      "title": "2025 年 AiDD 第七届研发数字峰会（北京站）",
+      "token": "IV0Hw3NqBikWW2knHDvcYMC7nbu",
+      "path": "我要找/峰会资料/2025 年 AiDD 第七届研发数字峰会（北京站）",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1755509972",
+      "has_child": true
+    },
+    {
+      "title": "2025 年 AICon 全球人工智能开发与应用大会（深圳站）",
+      "token": "XIBHwK62AiwcASkPtM5ca4KFnbd",
+      "path": "我要找/峰会资料/2025 年 AICon 全球人工智能开发与应用大会（深圳站）",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1756289417",
+      "has_child": true
+    },
+    {
+      "title": "2025年 CSDI 中国软件研发创新科技峰会（深圳站）",
+      "token": "QyIKwH3yYiHEquk7khNcULWvnZc",
+      "path": "我要找/峰会资料/2025年 CSDI 中国软件研发创新科技峰会（深圳站）",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1760774195",
+      "has_child": true
+    },
+    {
+      "title": "2025 年 QCon 全球软件开发大会（上海站）",
+      "token": "Hf2TwRYK8iHnptkvAtWcbzjCncc",
+      "path": "我要找/峰会资料/2025 年 QCon 全球软件开发大会（上海站）",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1762303919",
+      "has_child": true
+    },
+    {
+      "title": "2025 年 AiDD 第八届研发数字峰会（深圳站）",
+      "token": "TqP5wOtoHiKczMkSkKAcAO2BnSc",
+      "path": "我要找/峰会资料/2025 年 AiDD 第八届研发数字峰会（深圳站）",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1766543895",
+      "has_child": true
+    },
+    {
+      "title": "2025 年 人人都是产品经理 AI 产品大会（深圳）",
+      "token": "GU1OwZKjsicmSHkalzEcKx3onqd",
+      "path": "我要找/峰会资料/2025 年 人人都是产品经理 AI 产品大会（深圳）",
+      "level": 2,
+      "obj_type": "docx",
+      "obj_edit_time": "1766551482",
+      "has_child": true
+    },
+    {
+      "title": "行业报告与政策趋势",
+      "token": "AIsIwmXAbizL2SkgTLocezurnkg",
+      "path": "行业报告与政策趋势",
+      "level": 0,
+      "obj_type": "docx",
+      "obj_edit_time": "1775099156",
+      "has_child": true
+    },
+    {
+      "title": "金融 / 银行",
+      "token": "DpOdwdQlCi1ikBkROvGcnPjUnjd",
+      "path": "行业报告与政策趋势/金融 / 银行",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1775100479",
+      "has_child": true
+    },
+    {
+      "title": "待删除",
+      "token": "BUvvwnEvji3vadkKKtRc3c3bnWe",
+      "path": "待删除",
+      "level": 0,
+      "obj_type": "docx",
+      "obj_edit_time": "1774915122",
+      "has_child": true
+    },
+    {
+      "title": "其他",
+      "token": "Iv8zw8ItIiHXTGkVQRmcvznJnJe",
+      "path": "待删除/其他",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1774760049",
+      "has_child": true
+    },
+    {
+      "title": "Claude Code",
+      "token": "EaLrwhjmHipui3kegnQc4lKrn4e",
+      "path": "待删除/Claude Code",
+      "level": 1,
+      "obj_type": "bitable",
+      "obj_edit_time": "1775101372",
+      "has_child": true
+    },
+    {
+      "title": "Vibe Coding",
+      "token": "NtrVwbfWTidq0BkUS1ZcWH6Nnwn",
+      "path": "待删除/Vibe Coding",
+      "level": 1,
+      "obj_type": "bitable",
+      "obj_edit_time": "1775099875",
+      "has_child": true
+    },
+    {
+      "title": "DeepSeek专题",
+      "token": "UuGAwOe1Riucipkmz2HcIgFZnbd",
+      "path": "待删除/DeepSeek专题",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1740125067",
+      "has_child": true
+    },
+    {
+      "title": "行业报告 / 白皮书",
+      "token": "BPtOwgXjXiO7p8k8PercE1kwnYa",
+      "path": "待删除/行业报告 / 白皮书",
+      "level": 1,
+      "obj_type": "docx",
+      "obj_edit_time": "1775098154",
+      "has_child": true
+    }
+  ]
+}
