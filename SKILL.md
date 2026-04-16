@@ -37,11 +37,24 @@ author: 磊叔 (AIRay1015)
 
 > **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../lark-shared/SKILL.md)（如已安装 lark-shared 技能）。
 
-## 首次使用流程（重要）
+## 配置和环境检测
 
-**当用户首次使用此技能时，必须先完成配置初始化。**
+**使用此技能前，请确保已完成以下检测和配置。**
 
-### 步骤 1：检测配置状态
+### 步骤 1：检查 lark-cli 安装状态
+
+首先检查 lark-cli 是否已安装：
+
+```bash
+lark-cli --version
+```
+
+如果未安装，请访问以下链接进行安装：
+https://github.com/larksuite/cli
+
+安装完成后，skill 将退出。请重新运行您的请求。
+
+### 步骤 2：检测配置状态
 
 首先检查配置是否已存在：
 
@@ -49,17 +62,17 @@ author: 磊叔 (AIRay1015)
 python3 {baseDir}/scripts/startup_check.py --check
 ```
 
-### 步骤 2：如果配置缺失，获取用户知识库信息
+### 步骤 3：获取用户知识库信息
 
 如果 `--check` 提示配置不存在，向用户询问：
 
-> "请提供您的飞书知识库 URL 以完成配置。格式类似：https://my.feishu.cn/wiki/xxxxx"
+> "请提供您的飞书知识库 URL 以完成配置。格式类似：https://my.feishu.cn/wiki/space/xxxxx"
 
 或
 
 > "请提供您的飞书知识库链接或空间 ID。"
 
-### 步骤 3：初始化配置
+### 步骤 4：初始化配置
 
 获取到用户的 URL 后，运行以下命令初始化配置：
 
@@ -69,11 +82,11 @@ python3 {baseDir}/scripts/startup_check.py --save-config "<用户提供的URL>"
 
 **示例**：
 ```bash
-# 用户提供的 URL: https://my.feishu.cn/wiki/QWQHwA9uYibmtzkZLJBccaEhnNd
-python3 {baseDir}/scripts/startup_check.py --save-config "https://my.feishu.cn/wiki/QWQHwA9uYibmtzkZLJBccaEhnNd"
+# 用户提供的 URL: https://my.feishu.cn/wiki/space/1234567890123456789
+python3 {baseDir}/scripts/startup_check.py --save-config "https://my.feishu.cn/wiki/space/1234567890123456789"
 ```
 
-### 步骤 4：验证配置
+### 步骤 5：验证配置
 
 配置保存后，再次检查确认：
 
@@ -83,91 +96,13 @@ python3 {baseDir}/scripts/startup_check.py --check
 
 看到 `✓ 配置有效` 提示后，即可继续执行用户的请求。
 
-### 完整对话示例
-
-```
-用户: 帮我把这个文档上传到飞书知识库
-
-AI: 好的，让我先检查一下配置...
-
-[运行 --check，发现配置不存在]
-
-AI: 首次使用需要配置您的飞书知识库。请提供您的知识库 URL。
-
-用户: https://my.feishu.cn/wiki/abc123
-
-AI: 收到，正在初始化配置...
-
-[运行 --save-config]
-
-AI: ✓ 配置已完成！现在开始上传您的文档...
-```
-
-## 执行前检查
-
-在任何操作前，**必须**首先检查环境配置：
-
-### 1. 检查 lark-cli 安装状态
-
-```bash
-lark-cli --version
-```
-
-如果未安装，执行：
-```bash
-npm install -g @larksuite/cli
-lark-cli auth login --domain <your-domain>
-```
-
-### 2. 检查并初始化配置文件
-
-配置文件位置：`{baseDir}/config.json`（其中 `{baseDir}` 为技能目录，路径因工具而异）
-- Claude Code: `~/.claude/skills/lark-wiki-hero/`
-- Codex CLI: `.codex/skills/lark-wiki-hero/`（项目内）或全局路径
-- OpenClaw: `~/.openclaw/workspace/skills/lark-wiki-hero/`
-
-**检查配置状态**：
-```bash
-python3 {baseDir}/scripts/startup_check.py --check
-```
-
-**如果配置不存在，初始化配置**：
-```bash
-# 方式 1：从 URL 直接初始化（推荐，适用于所有环境）
-python3 {baseDir}/scripts/startup_check.py --save-config "https://my.feishu.cn/wiki/<token>"
-
-# 方式 2：交互式初始化（仅适用于手动终端，不适用于 Claude Code）
-python3 {baseDir}/scripts/startup_check.py --init
-```
-
-> **注意**：`--init` 使用交互式输入，只能在手动终端中使用。在 AI 编码工具（Claude Code / Codex / OpenClaw）中，请使用 `--save-config` 直接传入 URL。
-
-**配置文件格式**：
-```json
-{
-  "space_id": "您的知识空间 ID",
-  "space_url": "您的知识库 URL",
-  "default_parent_token": "默认父节点（留空表示根目录）"
-}
-```
-
-### 3. 配置检查失败的处理
-
-如果配置检查失败，脚本会自动提示初始化命令。对于首次使用的用户，应该：
-
-1. 首先运行 `--check` 确认环境状态
-2. 使用 `--save-config` 传入知识库 URL 进行配置
-3. 配置完成后重新执行目标操作
-
-> **注意**：交互式配置 (`--init`) 仅适用于手动终端环境。在 AI 编码工具中请使用 `--save-config`。
-
 ## 功能概述
 
 Lark Wiki Hero 是一个智能飞书知识库管理工具，提供三大核心功能：
 
-1. **智能分类** - AI 语义分析，自动推荐最佳分类路径
-2. **智能上传** - 基于语义理解自动分析文档内容，匹配知识库最佳分类目录
-3. **知识库分析** - 全面分析知识库结构，生成健康度评分和问题诊断报告
+1. **🧠 智能分类** - AI 语义分析，自动推荐最佳分类路径
+2. **📤 智能上传** - 基于语义理解自动分析文档内容，匹配知识库最佳分类目录
+3. **📊 知识库分析** - 全面分析知识库结构，生成健康度评分和问题诊断报告
 
 ---
 
@@ -241,7 +176,7 @@ AI 根据以下因素进行分类：
 
 #### 步骤 5：写入本地文件
 
-用户确认或调整后，将推荐结果写入本地文件 `config/categorize_result.json`。
+用户确认或调整后，将推荐结果写入本地文件 `config/categorize_result.json`，覆盖原有内容。
 
 文件格式为 JSON，UTF-8 编码，结构如下：
 
@@ -262,7 +197,6 @@ AI 根据以下因素进行分类：
     }
   ]
 }
-```
 ```
 
 ---
@@ -295,42 +229,7 @@ AI 根据以下因素进行分类：
 | `.pdf` | 多步操作（参考 lark-wiki-cli-reference.md 模块二） |
 | `.md` / `.mdx` / `.txt` | 单一命令（参考 lark-wiki-cli-reference.md 模块一） |
 
-### 执行示例
-
-**用户请求**（PDF）：
-> "上传这个文档：OpenClaw在企业办公中的应用.pdf"
-
-```
-1. 读取 categorize_result.json → token: LRMHwS2kFiHAHzkGn9ccSUz4nRh
-2. 生成 upload_plan.json:
-   {
-     "file": "OpenClaw在企业办公中的应用.pdf",
-     "type": "pdf",
-     "steps": [
-       {"step": 1, "command": "lark-cli api POST ... --data '{\"parent_node_token\": \"LRMHwS2kFiHAHzkGn9ccSUz4nRh\", ...}'", "note": "创建文档节点"},
-       {"step": 2, "command": "cp \"./OpenClaw在企业办公中的应用.pdf\" ./temp_upload.pdf", "note": "复制 PDF 到当前目录"},
-       {"step": 3, "command": "lark-cli docs +media-insert ...", "note": "插入 PDF 到文档"},
-       {"step": 4, "command": "rm ./temp_upload.pdf", "note": "清理临时文件"}
-     ]
-   }
-3. 执行上传（参考 lark-wiki-cli-reference.md 模块二）
-4. 返回文档链接
-```
-
-**用户请求**（Markdown）：
-> "上传这份教程：Python异步编程.md"
-
-```
-1. 读取 categorize_result.json → token: OW8NwuLTOiRp7BkwckicSYUDnle
-2. 生成 upload_plan.json:
-   {
-     "file": "Python异步编程.md",
-     "type": "markdown",
-     "command": "lark-cli api POST \"/open-apis/wiki/v2/spaces/{space_id}/nodes\" --data '{\"parent_node_token\": \"OW8NwuLTOiRp7BkwckicSYUDnle\", \"obj_type\": \"docx\", \"node_type\": \"origin\", \"title\": \"Python异步编程\"}'"
-   }
-3. 执行上传（参考 lark-wiki-cli-reference.md 模块一）
-4. 返回文档链接
-```
+> **详细操作流程**：参考 [`lark-wiki-cli-reference.md`](./lark-wiki-cli-reference.md) 模块二（PDF 上传）和模块三（批量上传要求）。
 
 ### 特殊情况处理
 
@@ -365,42 +264,20 @@ AI 根据以下因素进行分类：
 ### 使用方式
 
 ```bash
-# 分析知识库（自动保存 JSON 和 Markdown 报告到 ./reports/）
+# 分析知识库（自动保存报告到 ./reports/）
 python3 {baseDir}/scripts/analyzer.py --analyze --verbose
-
-# 指定输出目录
-python3 {baseDir}/scripts/analyzer.py --analyze -o ./custom_reports
 ```
 
 ### 评分体系
 
-| 维度 | 权重 | 说明 |
-|------|------|------|
-| **结构健康度** | 40% | 层级合理性、深度分布 |
-| **组织规范度** | 35% | 孤立节点、空分类检测 |
-| **内容丰富度** | 25% | 节点数量、类型多样性 |
-
-### 评分等级
-
-| 等级 | 分数范围 | 说明 |
-|------|---------|------|
-| **S** | 95-100 | 优秀 - 知识库状态极佳 |
-| **A** | 85-94 | 良好 - 健康度高，有小问题 |
-| **B** | 70-84 | 中等 - 存在明显问题需改进 |
-| **C** | 60-69 | 较差 - 多项指标不达标 |
-| **D** | <60 | 不健康 - 需要全面重构 |
+基于结构健康度、组织规范度、内容丰富度三个维度综合评分（S/A/B/C/D 五级）。
 
 ### 输出报告
 
-分析器会实时获取数据并生成以下报告：
+分析器会实时获取数据并生成报告：
 
-- **控制台输出**：可视化文本报告（评分、进度条、状态图标）
-- **JSON 文件**：结构化数据，供后续处理或导入其他工具
-- **Markdown 文件**：格式化报告，适合文档归档
-
-**输出文件命名**：
-- `wiki_analysis_{timestamp}.json`
-- `wiki_analysis_{timestamp}.md`
+- **控制台输出**：可视化文本报告
+- **Markdown 文件**：`wiki_analysis_YYYYMM.md`（按年月归档）
 
 ### 检测的问题
 
@@ -421,190 +298,3 @@ python3 {baseDir}/scripts/analyzer.py --analyze -o ./custom_reports
 | 单文件上传 | `python3 {baseDir}/scripts/2-smart-upload.py <file>` |
 | 批量上传 | `python3 {baseDir}/scripts/2-smart-upload.py --tasks tasks.json` |
 | 知识库分析 | `python3 {baseDir}/scripts/analyzer.py --analyze --verbose` |
-
-## 权限要求
-
-| 操作 | 所需 scope |
-|------|-----------|
-| 创建节点 | `wiki:node:create` 或 `wiki:wiki` |
-| 读取节点 | `wiki:node:read` 或 `wiki:wiki:readonly` |
-| 更新节点 | `wiki:node:update` 或 `wiki:wiki` |
-| 删除节点 | `wiki:node:delete` 或 `wiki:wiki` |
-| 移动节点 | `wiki:node:move` 或 `wiki:wiki` |
-| 复制节点 | `wiki:node:copy` 或 `wiki:wiki` |
-
-**登录认证**：
-```bash
-lark-cli auth login --domain <your-domain>
-```
-
-## 注意事项
-
-1. **API 限流**：批量操作时自动添加延迟（1000ms/次）
-2. **中文编码**：所有 API 调用使用 UTF-8 编码
-3. **写操作确认**：所有修改操作前都会请求用户确认
-4. **大文件处理**：文件 >100KB 时跳过复杂格式化
-
-## 故障排除
-
-### 诊断工具
-
-首先运行诊断命令检查环境状态：
-
-```bash
-python3 {baseDir}/scripts/startup_check.py --check
-```
-
-该命令会检查：
-- ✓ lark-cli 是否安装
-- ✓ 配置文件是否存在
-- ✓ 配置格式是否正确
-- ✓ space_id 是否有效
-
-### 常见问题
-
-#### 1. lark-cli 未安装
-
-**错误信息**：`❌ 未检测到 lark-cli`
-
-**解决方案**：
-```bash
-# 安装 lark-cli
-npm install -g @larksuite/cli
-
-# 登录认证
-lark-cli auth login --domain <your-domain>
-```
-
-**验证安装**：
-```bash
-lark-cli --version
-lark-cli auth status
-```
-
-#### 2. 配置文件不存在或损坏
-
-**错误信息**：`⚠️ 配置文件不存在` 或 `配置文件格式错误`
-
-**解决方案**：
-```bash
-# 删除旧配置（如果存在）
-rm {baseDir}/config.json
-
-# 重新初始化配置（使用 --save-config 适用于所有环境）
-python3 ~/.claude/skills/lark-wiki-hero/scripts/startup_check.py --save-config "https://my.feishu.cn/wiki/<token>"
-
-# 或者：在手动终端中使用交互式初始化
-# python3 ~/.claude/skills/lark-wiki-hero/scripts/startup_check.py --init
-```
-
-#### 3. 权限不足
-
-**错误信息**：`API 调用失败: permission denied` 或 `403 Forbidden`
-
-**解决方案**：
-```bash
-# 检查当前权限
-lark-cli auth scopes
-
-# 重新登录
-lark-cli auth login --domain <your-domain>
-
-# 确保有必要的权限：
-# - wiki:node:create (创建节点)
-# - wiki:node:read (读取节点)
-# - wiki:wiki (完整权限，推荐)
-```
-
-#### 4. space_id 无效
-
-**错误信息**：`无法获取 space_id` 或 `知识空间不存在`
-
-**解决方案**：
-```bash
-# 列出可用的知识空间
-lark-cli api GET "/open-apis/wiki/v2/spaces"
-
-# 从输出中复制 space_id，手动更新配置文件
-# 或使用 --save-config 重新配置
-python3 {baseDir}/scripts/startup_check.py --save-config "https://my.feishu.cn/wiki/<space_id>"
-
-# 或者：在手动终端中使用交互式初始化
-# python3 {baseDir}/scripts/startup_check.py --init
-```
-
-#### 5. API 调用失败
-
-**错误信息**：`API 调用失败` 或 `Connection refused`
-
-**诊断步骤**：
-```bash
-# 1. 检查网络连接
-ping my.feishu.cn
-
-# 2. 检查 lark-cli 配置
-lark-cli config list
-
-# 3. 测试 API 调用
-lark-cli api GET "/open-apis/wiki/v2/spaces"
-
-# 4. 如果使用代理，检查代理设置
-echo $HTTP_PROXY
-echo $HTTPS_PROXY
-```
-
-#### 6. Python 脚本执行错误
-
-**错误信息**：`ModuleNotFoundError` 或 `No module named`
-
-**解决方案**：
-```bash
-# 确保使用 Python 3.9+
-python3 --version
-
-# 检查脚本权限
-chmod +x ~/.claude/skills/lark-wiki-hero/scripts/*.py
-```
-
-### 手动创建配置文件
-
-如果自动初始化失败，可以手动创建 `{baseDir}/config.json`（参考上方配置文件位置）：
-
-```json
-{
-  "space_id": "从知识库 URL 中提取的 token",
-  "space_url": "https://my.feishu.cn/wiki/您的token",
-  "default_parent_token": ""
-}
-```
-
-**提取 space_id 的方法**：
-
-1. **从 URL 提取**：
-   ```
-   URL: https://my.feishu.cn/wiki/QWQHwA9uYibmtzkZLJBccaEhnNd
-   space_id: QWQHwA9uYibmtzkZLJBccaEhnNd
-   ```
-
-2. **通过 API 获取**：
-   ```bash
-   lark-cli api GET "/open-apis/wiki/v2/spaces"
-   ```
-
-### 日志和调试
-
-如果问题依然存在，启用详细日志：
-
-```bash
-# 设置环境变量启用调试
-export LARK_CLI_DEBUG=1
-
-# 重新执行操作
-python3 {baseDir}/scripts/2-smart-upload.py <file>
-```
-
-查看日志文件位置：
-```bash
-# lark-cli 日志
-~/.lark-cli/logs/
-```
