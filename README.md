@@ -222,7 +222,7 @@ git clone https://github.com/akira82-ai/lark-wiki-hero.git ~/.openclaw/workspace
 
 MIT
 
-*最后更新：2026-04-15*
+*最后更新：2026-04-16*
 
 ---
 
