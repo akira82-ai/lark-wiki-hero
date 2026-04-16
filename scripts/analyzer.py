@@ -1338,6 +1338,7 @@ class WikiStructureAnalyzer:
         # 总体评估
         print("\n📋 3.1 总体评估")
 
+        total = scores["total"]
         total_score = total["score"]
         if total_score >= 85:
             assessment = "知识库整体健康状况良好，处于行业领先水平。"
