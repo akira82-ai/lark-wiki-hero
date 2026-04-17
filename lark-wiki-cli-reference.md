@@ -168,7 +168,7 @@ cp "/原始路径/文件.pdf" ./temp_upload.pdf
 
 ```bash
 lark-cli docs +media-insert \
-  --doc "https://my.feishu.cn/wiki/{space_id}?node={node_token}" \
+  --doc "https://my.feishu.cn/wiki/{node_token}" \
   --file ./temp_upload.pdf \
   --type file
 ```
