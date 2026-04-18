@@ -24,7 +24,7 @@ author: 磊叔 (AIRay1015)
 📊 知识库分析：结构诊断 + 健康度评分 + 问题检测
 ✨ 操作前预览，确认后才执行
 ═══════════════════════════════════════════════════════════════
-最后更新：2026-04-16
+最后更新：2026-04-18
 ```
 
 技能已启动...
@@ -294,7 +294,6 @@ python3 {baseDir}/scripts/analyzer.py --analyze --verbose
 
 | 功能 | 命令 |
 |------|------|
-| 智能分类 | `python3 {baseDir}/scripts/classifier.py <files...>` |
-| 单文件上传 | `python3 {baseDir}/scripts/2-smart-upload.py <file>` |
-| 批量上传 | `python3 {baseDir}/scripts/2-smart-upload.py --tasks tasks.json` |
+| 单文件上传 | `python3 {baseDir}/scripts/smart_upload.py <file>` |
+| 批量上传 | `python3 {baseDir}/scripts/smart_upload.py --tasks tasks.json` |
 | 知识库分析 | `python3 {baseDir}/scripts/analyzer.py --analyze --verbose` |

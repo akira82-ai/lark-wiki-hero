@@ -202,7 +202,7 @@ git clone https://github.com/akira82-ai/lark-wiki-hero.git ~/.openclaw/workspace
 ├── README.md
 └── scripts/
     ├── lark_api.py          # 飞书 API 封装
-    ├── uploader.py          # 智能上传
+    ├── smart_upload.py     # 智能上传
     ├── analyzer.py          # 结构分析
     ├── optimizer.py         # 优化执行
     └── formatter.py         # 文档格式化
@@ -222,7 +222,7 @@ git clone https://github.com/akira82-ai/lark-wiki-hero.git ~/.openclaw/workspace
 
 MIT
 
-*最后更新：2026-04-16*
+*最后更新：2026-04-18*
 
 ---
 

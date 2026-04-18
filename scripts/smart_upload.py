@@ -152,7 +152,7 @@ def main():
         with open(args.tasks, "r", encoding="utf-8") as f:
             tasks = json.load(f)
     else:
-        print("用法: python3 2-smart-upload.py --tasks tasks.json")
+        print("用法: python3 smart_upload.py --tasks tasks.json")
         sys.exit(1)
 
     upload_batch(tasks, delay=args.delay)
